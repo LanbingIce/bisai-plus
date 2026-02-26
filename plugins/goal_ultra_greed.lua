@@ -1,0 +1,184 @@
+local function IsUltraGreedRoom()
+	local goal = BISAI_PLUS.Data.Save.Goal
+	if goal ~= BISAI_PLUS.Shared.Goal.ULTRA_GREED then
+		return false
+	end
+
+	return BISAI_PLUS.Shared.GoalData[goal].IsStage() and BISAI_PLUS.Shared.GoalData[goal].IsRoom()
+end
+
+local function OnNPCUpdate(_, npc)
+	-- 确保实体是大贪婪
+	if npc.Type ~= EntityType.ENTITY_ULTRA_GREED then
+		return
+	end
+	-- 确保是大贪婪终点
+	if BISAI_PLUS.Data.Save.Goal ~= BISAI_PLUS.Shared.Goal.ULTRA_GREED then
+		return
+	end
+
+	-- 确保是普通难度
+	if Game().Difficulty ~= Difficulty.DIFFICULTY_NORMAL then
+		return
+	end
+
+	repeat -- 大贪婪一阶段死亡后召唤二阶段的处理
+		-- Variant：0 表示大贪婪一阶段
+		if npc.Variant ~= 0 then
+			break
+		end
+		local sprite = npc:GetSprite()
+
+		-- 大贪婪一阶段死亡动画播放完后，会播放Final动画
+		if not sprite:IsPlaying("Final") then
+			break
+		end
+
+		if sprite:GetFrame() == 0 then
+			-- 防止游戏减速情况下，动画多次播放第0帧，导致多次召唤
+			sprite:SetFrame(1)
+			-- Final开始播放时，召唤大贪婪二阶段的实体并隐藏（因为召唤时是Idle状态）
+			local greed2 =
+				Game():Spawn(EntityType.ENTITY_ULTRA_GREED, 1, npc.Position, Vector.Zero, nil, 0, npc.InitSeed)
+			greed2.Visible = false
+		else
+			-- 下一帧把一阶段的大贪婪移除
+			-- 此时二阶段已经取消隐藏，所以动画可以正常衔接
+			npc:Remove()
+		end
+
+	until true
+
+	repeat -- 大贪婪二阶段动画处理
+		-- Variant：1 表示大贪婪二阶段
+		if npc.Variant ~= 1 then
+			break
+		end
+		local sprite = npc:GetSprite()
+		-- Idle(已隐藏)->Hanging(已隐藏)->BreakFreeShort ->Appearing(被跳过)-> 正常状态
+		-- 召唤出来的第一帧是Idle，已经被隐藏了不会显示出来
+		-- 第二帧会变成Hanging（上吊），立刻跳到BreakFreeShort状态（雕像震动，砸地）
+		if sprite:IsPlaying("Hanging") then
+			sprite:Play("BreakFreeShort", true)
+			npc.Visible = true
+		elseif sprite:IsPlaying("Appearing") and sprite:GetFrame() < 30 then
+			-- Appearing状态（上吊的大贪婪跳下来的动画）直接跳过
+			-- 需要判断当前不是第30帧，防止游戏在减速的情况下重复设置，重复设置会让大贪婪卡住
+			sprite:SetFrame(30)
+			-- 已经跳过了Appearing状态，取消隐藏状态
+			npc.Visible = true
+		elseif sprite:IsPlaying("BreakFreeShort") and sprite:GetFrame() >= 78 then
+			-- BreakFreeShort状态结束后（79帧之后）会导致AI异常，因此必须在第79帧跳到Appearing状态
+			-- 游戏在加速状态下（兴奋药，坏表）时，第78帧结束之后就会导致AI异常，因此需要在第78帧就跳
+			sprite:Play("Appearing", true)
+			-- 隐藏Appearing状态，防止贴图违和，只隐藏1帧，人眼基本看不出来
+			npc.Visible = false
+		end
+	until true
+end
+
+local function OnUpdate()
+	-- 大贪婪路线踩下按钮召唤大贪婪
+	if not IsUltraGreedRoom() then
+		return
+	end
+
+	local room = Game():GetRoom()
+	local grid = room:GetGridEntity(67)
+
+	if not grid then
+		return
+	end
+
+	-- 确保对应位置上面有按钮
+	if grid:GetType() ~= GridEntityType.GRID_PRESSURE_PLATE then
+		return
+	end
+
+	-- VarData为1表示已经召唤了大贪婪
+	if grid.VarData == 1 then
+		return
+	end
+
+	-- State为3表示按钮被踩下
+	if grid.State ~= 3 then
+		return
+	end
+
+	-- VarData为1表示已经召唤了大贪婪
+	grid.VarData = 1
+	-- 强行把门全部删除
+	for i = 0, DoorSlot.NUM_DOOR_SLOTS - 1 do
+		room:RemoveDoor(i)
+	end
+	-- 位置和贪婪模式的生成位置一样
+	local pos = room:GetGridPosition(127)
+	-- 种子用当前房间的生成种子
+	local seed = room:GetSpawnSeed()
+	-- 生成大贪婪
+	Game():Spawn(EntityType.ENTITY_ULTRA_GREED, 0, pos, Vector.Zero, nil, 0, seed)
+	-- 将房间设为未清理状态
+	room:SetClear(false)
+
+	local music = MusicManager()
+	music:Crossfade(Music.MUSIC_ULTRAGREED_BOSS)
+end
+local function OnNewRoom()
+	-- 大贪婪终点，凹凸房间生成按钮
+	if not IsUltraGreedRoom() then
+		return
+	end
+
+	-- 如果有奖杯，不生成按钮
+	local trophys = Isaac.FindByType(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TROPHY, 0, true, true)
+	if #trophys > 0 then
+		return
+	end
+	local room = Game():GetRoom()
+	-- 先移除原来的按钮
+	room:RemoveGridEntity(67, 0, false)
+	room:Update()
+	-- Variant 3表示矿层的黄色按钮
+	room:SpawnGridEntity(67, GridEntityType.GRID_PRESSURE_PLATE, 3, 1, 0)
+end
+
+local function OnStarUpdate(_, star)
+	if not IsUltraGreedRoom() then
+		return
+	end
+
+	-- 锁定伯利恒的位置
+	star.Velocity = Vector.Zero
+	local room = Game():GetRoom()
+	star.Position = room:GetCenterPos()
+
+	if star.Visible then
+		return
+	end
+	-- 如果伯利恒进入凹凸房间了，移除并重新生成一个
+	-- TODO：找一个更好的解决方案
+	star:Remove()
+	Game():Spawn(
+		EntityType.ENTITY_FAMILIAR,
+		FamiliarVariant.STAR_OF_BETHLEHEM,
+		star.Position,
+		Vector.Zero,
+		nil,
+		0,
+		star.InitSeed
+	)
+end
+
+local function OnClearAward()
+	if not IsUltraGreedRoom() then
+		return
+	end
+	local music = MusicManager()
+	music:Crossfade(Music.MUSIC_BOSS_OVER)
+end
+
+BISAI_PLUS:AddCallback(ModCallbacks.MC_NPC_UPDATE, OnNPCUpdate)
+BISAI_PLUS:AddCallback(ModCallbacks.MC_POST_UPDATE, OnUpdate)
+BISAI_PLUS:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, OnNewRoom)
+BISAI_PLUS:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, OnClearAward)
+BISAI_PLUS:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, OnStarUpdate, FamiliarVariant.STAR_OF_BETHLEHEM)

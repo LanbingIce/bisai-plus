@@ -1,0 +1,21 @@
+<shaders>
+    <shader name="Bisai-RenderAboveHUD">
+        <vertex>
+            attribute vec4 Position;
+            attribute vec2 TexCoord;
+            varying vec2 VaryingTexCoord;
+            uniform mat4 Transform;
+            void main() {
+            VaryingTexCoord = TexCoord;
+            gl_Position = Transform * Position;
+            }
+        </vertex>
+        <fragment>
+            varying vec2 VaryingTexCoord;
+            uniform sampler2D Texture0;
+            void main() {
+            gl_FragColor = texture2D(Texture0, VaryingTexCoord);
+            }
+        </fragment>
+    </shader>
+</shaders>
