@@ -115,7 +115,7 @@ Shared.GoalData = {
 			return Game():GetLevel():GetStage() == LevelStage.STAGE8
 		end,
 		OnSelect = function()
-			SFXManager():Play(SoundEffect.SOUND_BEAST_ANGELIC_BLAST)
+			SFXManager():Play(SoundEffect.SOUND_FLASHBACK)
 		end,
 	},
 	[Shared.Goal.LAMB] = {
