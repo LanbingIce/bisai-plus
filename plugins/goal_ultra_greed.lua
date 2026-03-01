@@ -1,3 +1,36 @@
+-- 箱子的Variant没有一个共用的值，所以只能列出所有的箱子Variant来判断了
+local chestVariants = {
+	[PickupVariant.PICKUP_CHEST] = true, -- 普通箱子
+	[PickupVariant.PICKUP_BOMBCHEST] = true, -- 石头箱子
+	[PickupVariant.PICKUP_SPIKEDCHEST] = true, -- 刺箱
+	[PickupVariant.PICKUP_ETERNALCHEST] = true, -- 白箱子
+	[PickupVariant.PICKUP_MIMICCHEST] = true, -- 伪装刺箱子
+	[PickupVariant.PICKUP_OLDCHEST] = true, -- 旧箱子
+	[PickupVariant.PICKUP_WOODENCHEST] = true, -- 木箱子
+	[PickupVariant.PICKUP_MEGACHEST] = true, -- 大金箱
+	[PickupVariant.PICKUP_HAUNTEDCHEST] = true, -- 幽灵箱
+	[PickupVariant.PICKUP_LOCKEDCHEST] = true, -- 金箱子
+	[PickupVariant.PICKUP_REDCHEST] = true, -- 红箱子
+}
+
+-- 清除房间内的箱子皮和空道具底座
+local function ClearRoomRemnants()
+	-- 搜索当前房间内的所有SubType是0的掉落物实体
+	-- 因为被玩家拾取的道具底座和打开的箱子的SubType会变为0
+	local pickups = Isaac.FindByType(EntityType.ENTITY_PICKUP, -1, 0, true, true)
+	for i = 1, #pickups do
+		local variant = pickups[i].Variant
+		-- 是否是箱子或者是道具底座
+		local isRemnant = variant == PickupVariant.PICKUP_COLLECTIBLE or chestVariants[variant]
+
+		if not isRemnant then
+			return
+		end
+		-- 如果确实是道具底座或者是箱子，就把它移除掉
+		pickups[i]:Remove()
+	end
+end
+
 local function IsUltraGreedRoom()
 	local goal = BISAI_PLUS.Data.Save.Goal
 	if goal ~= BISAI_PLUS.Shared.Goal.ULTRA_GREED then
@@ -111,6 +144,10 @@ local function OnUpdate()
 	for i = 0, DoorSlot.NUM_DOOR_SLOTS - 1 do
 		room:RemoveDoor(i)
 	end
+
+	-- 清除箱子皮和空道具底座
+	ClearRoomRemnants()
+
 	-- 位置和贪婪模式的生成位置一样
 	local pos = room:GetGridPosition(127)
 	-- 种子用当前房间的生成种子
