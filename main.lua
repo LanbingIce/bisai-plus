@@ -130,6 +130,7 @@ include("plugins.mechanic_revive") -- 结算之后，让玩家免死
 include("plugins.mechanic_stop_game_time") -- 准备时，暂停游戏时间
 include("plugins.mechanic_time_limit") -- 时间限制，超过30分钟根据时间增加碎心
 include("plugins.mechanic_void_map") -- 百变怪终点，进入虚空时显示地图
+include("plugins.mechanic_void_portal") -- 教堂/阴间如果没有对应的全家福/底片，宝箱被替换为虚空门
 include("plugins.route_beast_close_door") -- 祸兽路线，关闭错误的门，防止选手走错
 include("plugins.route_beast_mom_exit") -- 祸兽路线击杀妈腿之后，允许离开BOSS房
 include("plugins.route_delirium_trophy") -- 百变怪房间始终生成奖杯
