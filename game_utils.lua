@@ -31,19 +31,24 @@ end
 
 ---@param trapdoor GridEntity
 function GameUtils.CloseTrapdoor(trapdoor)
-	-- 0:普通下层坑
-	-- 1:虚空门
-	if trapdoor and trapdoor:GetType() == GridEntityType.GRID_TRAPDOOR and trapdoor:GetVariant() == 0 then
-		-- 0:关闭状态
-		-- 1:打开状态
-		trapdoor.State = 0
-		local sprite = trapdoor:GetSprite()
-		if sprite:GetAnimation() ~= "Closed" then
-			sprite:Play("Closed", true)
-		end
-		-- 锁死动画，防止鬼畜
-		sprite:SetFrame(0)
+	-- 安全检查，确保 trapdoor 存在
+	if not trapdoor then
+		return
 	end
+
+	-- 确保这是一个下层门
+	if trapdoor:GetType() ~= GridEntityType.GRID_TRAPDOOR then
+		return
+	end
+
+	-- 确保是普通的下层门，Variant为1的话是虚空传送门
+	if trapdoor:GetVariant() ~= 0 then
+		return
+	end
+
+	local sprite = trapdoor:GetSprite()
+	-- 锁定为关闭状态
+	sprite:SetFrame("Closed", 0)
 end
 
 ---@param trapdoor GridEntity
