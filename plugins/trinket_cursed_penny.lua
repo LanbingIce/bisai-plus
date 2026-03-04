@@ -14,6 +14,11 @@ local function OnPickupCollision(_, pickup, collider, low)
 		return
 	end
 
+	-- 如果角色是里骨哥的魂，则采用其本体
+	if player:GetPlayerType() == PlayerType.PLAYER_THESOUL_B and player:GetOtherTwin() then
+		player = player:GetOtherTwin()
+	end
+
 	-- 确保是真正的角色
 	if not GameUtils.IsRealPlayer(player) then
 		return
