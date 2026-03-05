@@ -984,6 +984,7 @@ function EnsureMainWindow()
 		-- 这里的颜色会自动应用你之前写的元表逻辑
 		window.backcolor = ThemeManager:GetWindowColor()
 		window.backcolornfocus = ThemeManager:GetWindowUnfocusedColor()
+		---@cast window +{RenderCustomMenuBack: function|nil} 解决一个警告
 		window.RenderCustomMenuBack = nil
 
 		if ThemeManager:IsUsingBackgroundImage() then
