@@ -94,6 +94,12 @@ local function OnNPCUpdate(_, npc)
 		if sprite:IsPlaying("Hanging") then
 			sprite:Play("BreakFreeShort", true)
 			npc.Visible = true
+			-- 究极贪婪上吊会增加15%的血量和血量上限，一阶段会上吊，血量3500->4025，没有问题
+			-- 二阶段并不会上吊，因此2500血量是正常的
+			-- 但是直接用代码召唤二阶段贪婪，也会触发上吊
+			-- 因此需要手动把增加的血量去掉
+			npc.HitPoints = 2500
+			npc.MaxHitPoints = 2500
 		elseif sprite:IsPlaying("Appearing") and sprite:GetFrame() < 30 then
 			-- Appearing状态（上吊的大贪婪跳下来的动画）直接跳过
 			-- 需要判断当前不是第30帧，防止游戏在减速的情况下重复设置，重复设置会让大贪婪卡住
