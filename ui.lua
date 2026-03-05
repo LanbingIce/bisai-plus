@@ -42,6 +42,7 @@ local WindowName = {
 
 local Data = {
 	Runtime = {
+		PlayerName = "未知角色",
 		DeathCount = 0,
 		ControllerIndex = 0,
 		MouseMoved = false,
@@ -201,27 +202,11 @@ local function RollCharacter()
 	MessageBus:Send(Messages.Command.SET_SEED, { Seed = seed })
 end
 
-local function GetPlayerDisplayName(playerType)
-	if playerType == PlayerType.PLAYER_LAZARUS2 then
-		playerType = PlayerType.PLAYER_LAZARUS
-	elseif playerType == PlayerType.PLAYER_THEFORGOTTEN or playerType == PlayerType.PLAYER_THESOUL then
-		playerType = PlayerType.PLAYER_THEFORGOTTEN
-	elseif playerType == PlayerType.PLAYER_JACOB or playerType == PlayerType.PLAYER_ESAU then
-		return "雅各&以扫"
-	elseif playerType == PlayerType.PLAYER_LAZARUS2_B then
-		playerType = PlayerType.PLAYER_LAZARUS_B
-	elseif playerType == PlayerType.PLAYER_THESOUL_B then
-		playerType = PlayerType.PLAYER_THEFORGOTTEN_B
-	elseif playerType == PlayerType.PLAYER_JACOB2_B then
-		playerType = PlayerType.PLAYER_JACOB_B
-	end
-
-	local name = Shared.PlayerNameMap[playerType]
-	if name then
-		return name
-	else
-		return "未知角色"
-	end
+---@return string
+local function GetCurrentPlayerName()
+	local player = Game():GetPlayer(0)
+	local name = Shared.PlayerNameMap[player:GetPlayerType()] or player:GetName() or "未知角色"
+	return name
 end
 
 local function UpdateRuntimeData(payload)
@@ -1021,7 +1006,7 @@ function EnsureMainWindow()
 				name,
 				function(button)
 					if button == 0 then
-						MessageBus:Send(Messages.Command.START_RUN, { Goal = i })
+						MessageBus:Send(Messages.Command.START_RUN, { Goal = i, PlayerName = GetCurrentPlayerName() })
 					end
 				end,
 				function()
@@ -1240,7 +1225,7 @@ local function HandleMenuKeyInput()
 		Input.IsActionTriggered(ButtonAction.ACTION_ITEM, Data.Runtime.ControllerIndex)
 		or Input.IsButtonTriggered(Keyboard.KEY_ENTER, Data.Runtime.ControllerIndex)
 	then
-		MessageBus:Send(Messages.Command.START_RUN, { Goal = Data.Runtime.Goal })
+		MessageBus:Send(Messages.Command.START_RUN, { Goal = Data.Runtime.Goal, PlayerName = GetCurrentPlayerName() })
 	end
 end
 
@@ -1349,8 +1334,12 @@ local function RenderHud()
 	cursorY = cursorY + lineHeight
 
 	-- [第四行] 玩家与种子 (原第五行)
-	local player = Game():GetPlayer(0)
-	local pName = GetPlayerDisplayName(player:GetPlayerType())
+
+	local pName = Data.Runtime.PlayerName
+	if Data.Runtime.State == Shared.State.READY then
+		pName = GetCurrentPlayerName()
+	end
+
 	local seedStr = Game():GetSeeds():GetStartSeedString()
 
 	local seedLabelW = DrawText(FontOutline, pName .. " - ", cursorX, cursorY, cWhite)

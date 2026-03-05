@@ -224,7 +224,7 @@ Shared.PlayerNameMap = {
 	[PlayerType.PLAYER_THEFORGOTTEN] = "遗骸",
 	[PlayerType.PLAYER_THESOUL] = "遗骸之魂",
 	[PlayerType.PLAYER_BETHANY] = "伯大尼",
-	[PlayerType.PLAYER_JACOB] = "雅各",
+	[PlayerType.PLAYER_JACOB] = "雅各&以扫",
 	[PlayerType.PLAYER_ESAU] = "以扫",
 
 	[PlayerType.PLAYER_ISAAC_B] = "堕化以撒",

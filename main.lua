@@ -93,6 +93,7 @@ BISAI_PLUS.Dispatcher = Dispatcher
 
 local Data = {
 	Save = {
+		PlayerName = "未知角色",
 		DeathCount = 0,
 		State = Shared.State.READY,
 		Goal = Shared.Goal.MEGA_SATAN,
@@ -186,6 +187,7 @@ local function SaveModData()
 
 	local payload = {
 		Save = {
+			PlayerName = Data.Save.PlayerName,
 			DeathCount = Data.Save.DeathCount,
 			State = state,
 			Goal = Data.Save.Goal,
@@ -217,6 +219,7 @@ local function GetPayload()
 		State = Data.Save.State,
 		Goal = Data.Save.Goal,
 		Timer = GetTimer(),
+		PlayerName = Data.Save.PlayerName,
 		DeathCount = Data.Save.DeathCount,
 		Record = {
 			Time = Data.Save.Record.Time,
@@ -287,6 +290,7 @@ local function HandleStartRun(payload)
 	Data.Save.Goal = payload.Goal
 	ResetTimer()
 	ResumeTimer()
+	Data.Save.PlayerName = payload.PlayerName
 	Data.Save.DeathCount = 0
 	Data.Save.Record = {
 		Time = 0,
