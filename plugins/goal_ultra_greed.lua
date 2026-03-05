@@ -166,7 +166,15 @@ local function OnUpdate()
 	local music = MusicManager()
 	music:Crossfade(Music.MUSIC_ULTRAGREED_BOSS)
 end
+
 local function OnNewRoom()
+	-- 遍历当前游戏中的所有角色，清除他们的上瘾标记
+	for i = 0, Game():GetNumPlayers() - 1 do
+		local player = Game():GetPlayer(i)
+		local data = player:GetData()
+		data.IsAddicted = nil
+	end
+
 	-- 大贪婪终点，凹凸房间生成按钮
 	if not IsUltraGreedRoom() then
 		return
@@ -220,8 +228,84 @@ local function OnClearAward()
 	music:Crossfade(Music.MUSIC_BOSS_OVER)
 end
 
+-- 将究极贪婪的大多数招式的伤害变成半血伤，最大限度还原贪婪模式下的究极贪婪
+local function OnEntityTakeDamage(_, entity, amount, damageFlags, source, countdownFrames)
+	-- 确保是在大贪婪房间内
+	if not IsUltraGreedRoom() then
+		return
+	end
+
+	-- 确保受伤的是角色
+	local player = entity:ToPlayer()
+	if not player then
+		return
+	end
+
+	-- 确保角色没有吃上瘾药
+	if player:GetData().IsAddicted then
+		return
+	end
+
+	-- 确保伤害来源是实体
+	local sourceEntity = source.Entity
+	if not sourceEntity then
+		return
+	end
+
+	local entityType = sourceEntity.Type
+	local entityVariant = sourceEntity.Variant
+
+	local finalDamage = amount
+
+	if entityType == EntityType.ENTITY_ULTRA_GREED then -- 究极贪婪
+		if damageFlags & DamageFlag.DAMAGE_CRUSH == DamageFlag.DAMAGE_CRUSH then -- 二阶段地裂波
+			finalDamage = 1
+		elseif damageFlags & DamageFlag.DAMAGE_EXPLOSION == DamageFlag.DAMAGE_EXPLOSION then -- 二阶段爆炸
+			finalDamage = 1
+		elseif damageFlags & DamageFlag.DAMAGE_LASER == DamageFlag.DAMAGE_LASER then -- 二阶段硫磺火
+			finalDamage = 1
+		else -- 都不是，返回
+			return
+		end
+	elseif entityType == EntityType.ENTITY_GREED_GAPER then -- 钥匙硬币开出的痴汉
+		finalDamage = sourceEntity.CollisionDamage
+	elseif entityType == EntityType.ENTITY_KEEPER then -- 召唤的贪婪头
+		finalDamage = sourceEntity.CollisionDamage
+	elseif entityType == EntityType.ENTITY_PROJECTILE then -- 怪物的子弹
+		if
+			entityVariant == ProjectileVariant.PROJECTILE_COIN
+			and damageFlags & DamageFlag.DAMAGE_EXPLOSION == DamageFlag.DAMAGE_EXPLOSION
+		then -- 二阶段的爆炸子弹
+			finalDamage = 1
+		else -- 其他子弹
+			finalDamage = sourceEntity.CollisionDamage
+		end
+	elseif entityType == EntityType.ENTITY_ULTRA_COIN then -- 究极贪婪召唤的四种硬币
+		finalDamage = 1
+	end
+
+	if amount ~= finalDamage then
+		player:TakeDamage(finalDamage, damageFlags | DamageFlag.DAMAGE_NO_MODIFIERS, source, countdownFrames)
+		return false
+	end
+end
+
+local function OnUsePill(_, pillEffect, player, useFlags)
+	-- 确保是在大贪婪房间内
+	if not IsUltraGreedRoom() then
+		return
+	end
+	-- 吃到上瘾药，打一个标记
+	if pillEffect ~= PillEffect.PILLEFFECT_ADDICTED then
+		return
+	end
+	player:GetData().IsAddicted = true
+end
+
 BISAI_PLUS:AddCallback(ModCallbacks.MC_NPC_UPDATE, OnNPCUpdate)
 BISAI_PLUS:AddCallback(ModCallbacks.MC_POST_UPDATE, OnUpdate)
 BISAI_PLUS:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, OnNewRoom)
 BISAI_PLUS:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, OnClearAward)
 BISAI_PLUS:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, OnStarUpdate, FamiliarVariant.STAR_OF_BETHLEHEM)
+BISAI_PLUS:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, OnEntityTakeDamage)
+BISAI_PLUS:AddCallback(ModCallbacks.MC_USE_PILL, OnUsePill)
