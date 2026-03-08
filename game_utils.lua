@@ -1,6 +1,60 @@
 ---@class GameUtils
 local GameUtils = {}
 
+---@param record {LevelStage: integer, StageType: integer, IsAscent: boolean, IsXL: boolean}
+---@return {Weight: integer, Name: string}
+function GameUtils.GetStageInfo(record)
+	local levelStage = record.LevelStage
+	local stageType = record.StageType
+	local isAscent = record.IsAscent
+	local isXL = record.IsXL
+
+	if levelStage == 0 then
+		return { Weight = 0, Name = "无" }
+	end
+
+	local weight = levelStage
+	local name = "未知"
+
+	-- 支线层权重 +1 (下水道、矿洞、陵墓、尸宫)
+	if stageType == StageType.STAGETYPE_REPENTANCE or stageType == StageType.STAGETYPE_REPENTANCE_B then
+		if levelStage <= LevelStage.STAGE4_2 then
+			weight = weight + 1
+		end
+	end
+
+	-- 名称生成逻辑
+	local stageNames = {
+		[LevelStage.STAGE1_1] = { "地下室", "地窖", "燃烧地下室", nil, "下水道", "污水井" },
+		[LevelStage.STAGE1_2] = { "地下室", "地窖", "燃烧地下室", nil, "下水道", "污水井" },
+		[LevelStage.STAGE2_1] = { "洞穴", "墓穴", "淹水洞穴", nil, "矿洞", "灰坑" },
+		[LevelStage.STAGE2_2] = { "洞穴", "墓穴", "淹水洞穴", nil, "矿洞", "灰坑" },
+		[LevelStage.STAGE3_1] = { "深牢", "坟场", "阴湿深牢", nil, "陵墓", "炼狱" },
+		[LevelStage.STAGE3_2] = { "深牢", "坟场", "阴湿深牢", nil, "陵墓", "炼狱" },
+		[LevelStage.STAGE4_1] = { "子宫", "血宫", "结痂子宫", nil, "尸宫" },
+		[LevelStage.STAGE4_2] = { "子宫", "血宫", "结痂子宫", nil, "尸宫" },
+		[LevelStage.STAGE4_3] = { "？？？" },
+		[LevelStage.STAGE5] = { "阴间", "教堂" },
+		[LevelStage.STAGE6] = { "暗室", "玩具箱" },
+		[LevelStage.STAGE7] = { "虚空" },
+		[LevelStage.STAGE8] = { "家", "家" },
+	}
+
+	-- 处理 I 和 II 的后缀
+	local suffix = ""
+
+	if levelStage <= 8 then
+		if levelStage % 2 == 0 then
+			suffix = " II"
+		else
+			suffix = " I"
+		end
+	end
+	name = stageNames[levelStage][stageType + 1] .. suffix
+
+	return { Weight = weight, Name = name }
+end
+
 ---@param player EntityPlayer
 ---@return boolean
 function GameUtils.IsRealPlayer(player)

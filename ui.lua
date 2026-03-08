@@ -57,6 +57,10 @@ local Data = {
 			Time = 0,
 			LevelStage = 0,
 			StageType = 0,
+			IsAscent = false,
+			IsXL = false,
+			LevelName = "无",
+			LevelWeight = 0,
 		},
 		IsRollingGoal = false,
 		GoalRollSequence = {},
@@ -211,6 +215,9 @@ end
 
 local function UpdateRuntimeData(payload)
 	Utils.DeepAssignExisting(Data.Runtime, payload)
+	local recordStageInfo = BISAI_PLUS.GameUtils.GetStageInfo(Data.Runtime.Record)
+	Data.Runtime.Record.LevelWeight = recordStageInfo.Weight
+	Data.Runtime.Record.LevelName = recordStageInfo.Name
 end
 
 local function UpdateWindowBackColors()
@@ -1354,12 +1361,8 @@ local function RenderHud()
 	dynamicX = dynamicX + DrawText(FontOutline, "记录：", dynamicX, cursorY, cWhite)
 
 	-- 5.2 获取数据
-	local rLevel = Data.Runtime.Record.LevelStage
-	local rType = Data.Runtime.Record.StageType
-	local stageGroup = Shared.StageInfo[rLevel]
-	local stageData = stageGroup and stageGroup[rType]
-	local weight = stageData and stageData.weight or "?"
-	local name = stageData and stageData.name or "-"
+	local weight = Data.Runtime.Record.LevelWeight
+	local name = Data.Runtime.Record.LevelName
 
 	-- 5.3 画权重 (Mono字体)
 	local weightStr = string.format("[%s]", weight)
