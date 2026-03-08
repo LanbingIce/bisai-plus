@@ -170,6 +170,24 @@ local function GetRecord()
 	return Utils.DeepCopy(Data.Save.Record or DEFAULT_RECORD)
 end
 
+local function GetCandidateRecord()
+	local level = Game():GetLevel()
+	local levelStage = level:GetStage()
+	local stageType = level:GetStageType()
+	local current_time = Isaac.GetTime()
+	local elapsed = current_time - Data.Runtime.Timer.StartTime
+	Data.Save.Timer.StoredTime = Data.Save.Timer.StoredTime + elapsed
+	Data.Runtime.Timer.StartTime = current_time
+	local candidateRecord = {
+		Time = Data.Save.Timer.StoredTime,
+		LevelStage = levelStage,
+		StageType = stageType,
+		IsAscent = level:IsAscent(),
+		IsXL = level:GetCurses() & LevelCurse.CURSE_OF_LABYRINTH == LevelCurse.CURSE_OF_LABYRINTH,
+	}
+	return candidateRecord
+end
+
 local function LoadModData()
 	local config = {}
 	if BISAI_PLUS:HasData() then
@@ -291,7 +309,7 @@ local function HandleStartRun(payload)
 	ResumeTimer()
 	Data.Save.PlayerName = payload.PlayerName
 	Data.Save.DeathCount = 0
-	Data.Save.Record = Utils.DeepCopy(DEFAULT_RECORD)
+	Data.Save.Record = GetCandidateRecord()
 	SaveModData()
 	MessageBus:Emit(Messages.Event.RUN_STARTED, GetPayload())
 end
@@ -424,23 +442,8 @@ local function OnGameExit()
 end
 
 local function OnNewLevel()
-	local level = Game():GetLevel()
-	local levelStage = level:GetStage()
-
 	-- 层数记录
-	local stageType = level:GetStageType()
-	local current_time = Isaac.GetTime()
-	local elapsed = current_time - Data.Runtime.Timer.StartTime
-	Data.Save.Timer.StoredTime = Data.Save.Timer.StoredTime + elapsed
-	Data.Runtime.Timer.StartTime = current_time
-	local candidateRecord = {
-		Time = Data.Save.Timer.StoredTime,
-		LevelStage = levelStage,
-		StageType = stageType,
-		IsAscent = level:IsAscent(),
-		IsXL = level:GetCurses() & LevelCurse.CURSE_OF_LABYRINTH == LevelCurse.CURSE_OF_LABYRINTH,
-	}
-
+	local candidateRecord = GetCandidateRecord()
 	local currentInfo = GameUtils.GetStageInfo(candidateRecord)
 	local recordInfo = GameUtils.GetStageInfo(Data.Save.Record)
 

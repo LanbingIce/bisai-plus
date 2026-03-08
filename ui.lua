@@ -1372,11 +1372,13 @@ local function RenderHud()
 	dynamicX = dynamicX + DrawText(FontOutline, " " .. name, dynamicX, cursorY, cWhite)
 
 	-- 5.5 画时间 (Mono字体)
-	if Data.Runtime.Record.Time > 0 then
+	if Data.Runtime.State ~= Shared.State.READY then
 		dynamicX = dynamicX + DrawText(FontOutline, " - ", dynamicX, cursorY, cWhite)
-
-		local rTime = ConvertMilliseconds(Data.Runtime.Record.Time)
-		local recordStr = string.format("%02d:%02d.%03d", rTime.Minutes, rTime.Seconds, rTime.Milliseconds)
+		local recordStr = "00:00"
+		if Data.Runtime.Record.Time > 0 then
+			local rTime = ConvertMilliseconds(Data.Runtime.Record.Time)
+			recordStr = string.format("%02d:%02d.%03d", rTime.Minutes, rTime.Seconds, rTime.Milliseconds)
+		end
 		DrawText(FontMono, recordStr, dynamicX, cursorY, cWhite)
 	end
 
