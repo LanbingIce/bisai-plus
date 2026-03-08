@@ -427,8 +427,6 @@ local function OnNewLevel()
 	local level = Game():GetLevel()
 	local levelStage = level:GetStage()
 
-	-- TODO 支持一下合并层
-
 	-- 层数记录
 	local stageType = level:GetStageType()
 	local current_time = Isaac.GetTime()
