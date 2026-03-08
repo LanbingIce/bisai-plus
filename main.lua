@@ -91,7 +91,15 @@ BISAI_PLUS.GameUtils = GameUtils
 local Dispatcher = require("bisai+.dispatcher")
 BISAI_PLUS.Dispatcher = Dispatcher
 
-local Data = {
+local DEFAULT_RECORD = {
+	Time = 0,
+	LevelStage = 0,
+	StageType = 0,
+	IsAscent = false,
+	IsXL = false,
+}
+
+local DEFAULT_DATA = {
 	Save = {
 		PlayerName = "未知角色",
 		DeathCount = 0,
@@ -100,11 +108,7 @@ local Data = {
 		Timer = {
 			StoredTime = 0,
 		},
-		Record = {
-			Time = 0,
-			LevelStage = 0,
-			StageType = 0,
-		},
+		Record = Utils.DeepCopy(DEFAULT_RECORD),
 	},
 	Runtime = {
 		InGame = false,
@@ -113,6 +117,8 @@ local Data = {
 		},
 	},
 }
+
+local Data = Utils.DeepCopy(DEFAULT_DATA)
 
 BISAI_PLUS.Data = Data
 
@@ -160,6 +166,10 @@ if debugger.Init then
 	debugger:Init(Data)
 end
 
+local function GetRecord()
+	return Utils.DeepCopy(Data.Save.Record or DEFAULT_RECORD)
+end
+
 local function LoadModData()
 	local config = {}
 	if BISAI_PLUS:HasData() then
@@ -194,11 +204,7 @@ local function SaveModData()
 			Timer = {
 				StoredTime = Data.Save.Timer.StoredTime,
 			},
-			Record = {
-				Time = Data.Save.Record.Time,
-				LevelStage = Data.Save.Record.LevelStage,
-				StageType = Data.Save.Record.StageType,
-			},
+			Record = GetRecord(),
 		},
 		Config = ConfigManager:GetConfig(),
 	}
@@ -221,11 +227,7 @@ local function GetPayload()
 		Timer = GetTimer(),
 		PlayerName = Data.Save.PlayerName,
 		DeathCount = Data.Save.DeathCount,
-		Record = {
-			Time = Data.Save.Record.Time,
-			LevelStage = Data.Save.Record.LevelStage,
-			StageType = Data.Save.Record.StageType,
-		},
+		Record = GetRecord(),
 	}
 end
 
@@ -273,11 +275,8 @@ local function HandleCreateRun()
 	Data.Save.Goal = Shared.Goal.MEGA_SATAN
 	ResetTimer()
 	Data.Save.DeathCount = 0
-	Data.Save.Record = {
-		Time = 0,
-		LevelStage = 0,
-		StageType = 0,
-	}
+	Data.Save.Record = Utils.DeepCopy(DEFAULT_RECORD)
+
 	SaveModData()
 	local seedStr = tostring(Game():GetSeeds():GetStartSeedString())
 	Isaac.ExecuteCommand("seed " .. seedStr)
@@ -292,11 +291,7 @@ local function HandleStartRun(payload)
 	ResumeTimer()
 	Data.Save.PlayerName = payload.PlayerName
 	Data.Save.DeathCount = 0
-	Data.Save.Record = {
-		Time = 0,
-		LevelStage = 0,
-		StageType = 0,
-	}
+	Data.Save.Record = Utils.DeepCopy(DEFAULT_RECORD)
 	SaveModData()
 	MessageBus:Emit(Messages.Event.RUN_STARTED, GetPayload())
 end
@@ -432,7 +427,6 @@ local function OnNewLevel()
 	local level = Game():GetLevel()
 	local levelStage = level:GetStage()
 
-	-- TODO 重构
 	-- TODO 支持一下合并层
 
 	-- 层数记录
@@ -441,13 +435,19 @@ local function OnNewLevel()
 	local elapsed = current_time - Data.Runtime.Timer.StartTime
 	Data.Save.Timer.StoredTime = Data.Save.Timer.StoredTime + elapsed
 	Data.Runtime.Timer.StartTime = current_time
-	local time = Data.Save.Timer.StoredTime
-	local currentWeight = Shared.StageInfo[levelStage][stageType].weight
-	local recordWeight = Shared.StageInfo[Data.Save.Record.LevelStage][Data.Save.Record.StageType].weight
-	if currentWeight > recordWeight then
-		Data.Save.Record.Time = time
-		Data.Save.Record.LevelStage = levelStage
-		Data.Save.Record.StageType = stageType
+	local candidateRecord = {
+		Time = Data.Save.Timer.StoredTime,
+		LevelStage = levelStage,
+		StageType = stageType,
+		IsAscent = level:IsAscent(),
+		IsXL = level:GetCurses() & LevelCurse.CURSE_OF_LABYRINTH == LevelCurse.CURSE_OF_LABYRINTH,
+	}
+
+	local currentInfo = GameUtils.GetStageInfo(candidateRecord)
+	local recordInfo = GameUtils.GetStageInfo(Data.Save.Record)
+
+	if currentInfo.Weight > recordInfo.Weight then
+		Data.Save.Record = candidateRecord
 		MessageBus:Emit(Messages.Event.RECORD_UPDATED, GetPayload())
 	end
 end
