@@ -395,7 +395,6 @@ local function OnNewRoom()
 end
 
 local function OnGameStarted(_, isContinued)
-	Options.Filter = false
 	LoadModData()
 
 	repeat
