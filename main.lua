@@ -367,12 +367,14 @@ local function HandleTrophyPickup(player)
 	-- 如果刚刚举起奖杯，则删除奖杯
 	if player.EntityCollisionClass == EntityCollisionClass.ENTCOLL_NONE then
 		local trophies = Isaac.FindByType(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TROPHY, -1, true, true)
-		local trophy = trophies[1]
 		-- 角色碰到奖杯的时候，角色会播放举起奖杯的动画，奖杯会被置为不可见并且碰撞体积被关闭，实际上奖杯还在原地，手上的只是一个贴图
-		if trophy and not trophy.Visible then
-			-- 动画结束之后，地上的奖杯会使得游戏通关，因此需要先把它移除掉
-			trophy:Remove()
-			data.TrophyPickupFrame = Game():GetFrameCount()
+		for _, trophy in ipairs(trophies) do
+			if not trophy.Visible then
+				-- 动画结束之后，地上的不可见的奖杯会使得游戏通关，因此需要先把它移除掉
+				trophy:Remove()
+				-- 为了让选手在满碎心状态下能举起奖杯，记录一下当前帧数，这样可以在死前一帧结算奖杯
+				data.TrophyPickupFrame = Game():GetFrameCount()
+			end
 		end
 	end
 end
