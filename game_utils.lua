@@ -9,6 +9,11 @@ function GameUtils.GetStageInfo(record)
 	local isAscent = record.IsAscent
 	local isXL = record.IsXL
 
+	-- 回溯路上视为同一层，称为回溯
+	if isAscent then
+		return { Weight = 8, Name = "回溯" }
+	end
+
 	if levelStage == 0 then
 		return { Weight = 0, Name = "无" }
 	end
@@ -44,7 +49,9 @@ function GameUtils.GetStageInfo(record)
 	local suffix = ""
 
 	if levelStage <= 8 then
-		if levelStage % 2 == 0 then
+		if isXL then
+			suffix = " XL"
+		elseif levelStage % 2 == 0 then
 			suffix = " II"
 		else
 			suffix = " I"
