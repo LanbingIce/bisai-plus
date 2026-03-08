@@ -3,3 +3,4 @@ debugger.lua
 .vscode/
 deploy.bat
 disable.it
+resources/gfx/main_bg.png
