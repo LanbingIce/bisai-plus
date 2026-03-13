@@ -1,5 +1,10 @@
 local function OnUpdate()
-	if BISAI_PLUS.Data.Save.Goal ~= BISAI_PLUS.Shared.Goal.BEAST then
+	-- 此处故意不判断是否是祸兽终点，让其他终点进入祸兽房间时也能触发这个机制
+	-- 判断是否是祸兽房间，优化性能，避免在其他房间无意义地遍历祸兽实体
+	local isBeastBossRoom = BISAI_PLUS.Shared.GoalData[BISAI_PLUS.Shared.Goal.BEAST].IsStage()
+		and BISAI_PLUS.Shared.GoalData[BISAI_PLUS.Shared.Goal.BEAST].IsRoom()
+
+	if not isBeastBossRoom then
 		return
 	end
 	local beasts = Isaac.FindByType(EntityType.ENTITY_BEAST, 0, -1, true, true)
