@@ -130,6 +130,7 @@ include("plugins.mechanic_ban_input") -- 准备阶段和暂停状态禁止任何
 include("plugins.mechanic_broken_heart_damage") -- 超时加碎心之后，根据碎心数量增加攻击力
 include("plugins.mechanic_chest_to_trophy") -- 将通关大宝箱替换为奖杯
 include("plugins.mechanic_disable_lamb_collision") -- 掉落奖杯时，移除羔羊身体的碰撞箱并使其半透明，防止选手拿不到奖杯
+include("plugins.mechanic_identify_amnesia_pill") -- 获得失忆症药丸时，立刻将其识别
 include("plugins.mechanic_kill_lost") -- 如果lost碎心满了，切换房间时处死lost，解决lost在碎心满了之后还能继续比赛的问题
 include("plugins.mechanic_polaroid_negative") -- 根据终点，自动把全家福修改为底片或者把底片修改为全家福
 include("plugins.mechanic_remove_beast_cutscene") -- 祸兽播放死亡动画时直接移除，防止全屏变白
