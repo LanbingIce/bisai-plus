@@ -71,7 +71,8 @@ Shared.GoalData = {
 		Nickname = "见证者",
 		Desc = [[- 封闭主线层的入口
 		- 进入支线层的门无代价自动开启
-		- 未获取[菜刀碎片1]和[菜刀碎片2]时，封闭支线层入口]],
+		- 未获取[菜刀碎片1]和[菜刀碎片2]时，封闭支线层入口
+		- 在矿层只需要触发一个按钮即可进入逃亡区域]],
 		IsRoom = function()
 			if Game():GetLevel():GetCurrentRoomIndex() ~= GridRooms.ROOM_SECRET_EXIT_IDX then
 				return false
