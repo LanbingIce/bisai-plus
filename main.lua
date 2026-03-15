@@ -1,4 +1,4 @@
--- TODO 超级种子功能
+﻿-- TODO 超级种子功能
 -- TODO 时间统计功能
 -- TODO 去动画
 
@@ -136,6 +136,7 @@ include("plugins.mechanic_minecart_button") -- 在见证者路线里，矿层只
 include("plugins.mechanic_polaroid_negative") -- 根据终点，自动把全家福修改为底片或者把底片修改为全家福
 include("plugins.mechanic_remove_beast_cutscene") -- 祸兽播放死亡动画时直接移除，防止全屏变白
 include("plugins.mechanic_remove_curses") -- 移除黑暗诅咒和迷路诅咒，第二章节及之后移除XL诅咒
+include("plugins.mechanic_reveal_rooms") -- 在见证者路线的前两章节的支线层中，揭示白火房间、镜子房间、刀柄房间、矿车房间的位置。
 include("plugins.mechanic_revive") -- 结算之后，让玩家免死
 include("plugins.mechanic_stop_game_time") -- 准备时，暂停游戏时间
 include("plugins.mechanic_time_limit") -- 时间限制，超过30分钟根据时间增加碎心
