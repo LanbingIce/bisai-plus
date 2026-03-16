@@ -1327,7 +1327,13 @@ local function RenderHud()
 	-- [第二行] 目标名称
 	local currentGoal = Shared.GoalData[Data.Runtime.Goal]
 	local goalNameStr = currentGoal and currentGoal.Name or "-"
-	DrawText(FontOutline, "目标：" .. goalNameStr, cursorX, cursorY, cWhite)
+	
+	local goalColor = cWhite
+	if Data.Runtime.State ~= Shared.State.RUNNING then
+		goalColor = KColor(0, 1, 0, 1)
+	end
+
+	DrawText(FontOutline, "目标：" .. goalNameStr, cursorX, cursorY, goalColor)
 
 	cursorY = cursorY + lineHeight
 
@@ -1345,9 +1351,14 @@ local function RenderHud()
 	end
 
 	local seedStr = Game():GetSeeds():GetStartSeedString()
+	
+	local playerSeedColor = cWhite
+	if Data.Runtime.State ~= Shared.State.RUNNING then
+		playerSeedColor = KColor(0, 1, 0, 1)
+	end
 
-	local seedLabelW = DrawText(FontOutline, pName .. " - ", cursorX, cursorY, cWhite)
-	DrawText(FontMono, seedStr, cursorX + seedLabelW, cursorY, cWhite)
+	local seedLabelW = DrawText(FontOutline, pName .. " - ", cursorX, cursorY, playerSeedColor)
+	DrawText(FontMono, seedStr, cursorX + seedLabelW, cursorY, playerSeedColor)
 
 	cursorY = cursorY + lineHeight
 
