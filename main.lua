@@ -181,10 +181,16 @@ local function GetCandidateRecord()
 	local level = Game():GetLevel()
 	local levelStage = level:GetStage()
 	local stageType = level:GetStageType()
-	local current_time = Isaac.GetTime()
-	local elapsed = current_time - Data.Runtime.Timer.StartTime
-	Data.Save.Timer.StoredTime = Data.Save.Timer.StoredTime + elapsed
-	Data.Runtime.Timer.StartTime = current_time
+
+	-- 仅在处于 RUNNING 状态下才累加时间并设置 StartTime
+	-- 这样如果在 PAUSED 或 FINISHED 状态下调用此函数构造 Record，时间就不会错误地产生偏移或重复计算
+	if Data.Save.State == Shared.State.RUNNING then
+		local current_time = Isaac.GetTime()
+		local elapsed = current_time - Data.Runtime.Timer.StartTime
+		Data.Save.Timer.StoredTime = Data.Save.Timer.StoredTime + elapsed
+		Data.Runtime.Timer.StartTime = current_time
+	end
+
 	local candidateRecord = {
 		Time = Data.Save.Timer.StoredTime,
 		LevelStage = levelStage,
