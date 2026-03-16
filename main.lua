@@ -192,11 +192,15 @@ local function GetCandidateRecord()
 		IsAscent = level:IsAscent(),
 		IsXL = level:GetCurses() & LevelCurse.CURSE_OF_LABYRINTH == LevelCurse.CURSE_OF_LABYRINTH,
 	}
-	
-	local recordStageInfo = GameUtils.GetStageInfo(candidateRecord)
-	candidateRecord.LevelWeight = recordStageInfo.Weight
-	candidateRecord.LevelName = recordStageInfo.Name
 
+	if Data.Save.State == Shared.State.FINISHED then
+		candidateRecord.LevelWeight = 99
+		candidateRecord.LevelName = "完成"
+	else
+		local recordStageInfo = GameUtils.GetStageInfo(candidateRecord)
+		candidateRecord.LevelWeight = recordStageInfo.Weight
+		candidateRecord.LevelName = recordStageInfo.Name
+	end
 	return candidateRecord
 end
 
@@ -383,6 +387,12 @@ local function CheckTrophyAnimationFinished(player)
 
 		Data.Save.State = Shared.State.FINISHED
 		PauseTimer()
+
+		local candidateRecord = GetCandidateRecord()
+
+		Data.Save.Record = candidateRecord
+		MessageBus:Emit(Messages.Event.RECORD_UPDATED, GetPayload())
+
 		MessageBus:Emit(Messages.Event.RUN_FINISHED, GetPayload())
 	end
 end
