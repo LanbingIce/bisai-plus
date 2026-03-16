@@ -26,10 +26,12 @@ do
 end
 
 local TextBoxSprite = Sprite()
+local StageIconSprite = Sprite()
 
 do
 	TextBoxSprite:Load("gfx/wdm_editor/ui copy.anm2", true)
 	TextBoxSprite:Play("custom textbox_bg")
+	StageIconSprite:Load("gfx/ui/stage/progress.anm2", true)
 end
 
 local WindowName = {
@@ -1261,6 +1263,199 @@ local function GetTimerComponents()
 
 	return ConvertMilliseconds(totalMilliseconds)
 end
+local function RenderTimeStatistics()
+	local sWidth = Isaac.GetScreenWidth()
+	local sHeight = Isaac.GetScreenHeight()
+	local centerX = sWidth / 2
+	local centerY = sHeight / 2
+
+	-- 整体向右下偏移，填补留白
+	local offsetX = 80
+	local offsetY = 40 -- 稍微往上移一点，避免底部文字被遮挡
+
+	-- 绘制统计图表
+	local records = BISAI_PLUS.Data.Save.Records
+
+	if records and #records > 1 then -- 需要至少两条记录（起点和终点）才能计算时间差
+		local numBars = #records - 1 -- 柱子的数量 = 记录数 - 1
+		local max = numBars
+		local dx = 40 - max * 1.5
+		local px = centerX + (max * dx) / 2 + offsetX
+		local py = centerY + 60 + offsetY
+		local l = 1 / 60000 -- 毫秒转分钟的比例，用于计算高度
+
+		-- 绘制背景底板
+		local bgScaleX = (max - 1) * dx / 10
+		local bgScaleY = 0.5
+		TextBoxSprite.Color = Color(0, 0, 0, 0.7)
+		TextBoxSprite.Scale = Vector(bgScaleX, bgScaleY)
+		TextBoxSprite:SetFrame(0)
+		-- 原版是底部中心对齐，现在是左上角对齐
+		-- 中心 X = px - (max + 1) * dx / 2
+		-- 底部 Y = py + 11
+		-- 左上角 X = 中心 X - bgScaleX
+		-- 左上角 Y = 底部 Y - bgScaleY * 2
+		TextBoxSprite:Render(Vector(px - (max + 1) * dx / 2 - bgScaleX, py + 11 - bgScaleY * 2))
+
+		for i = max, 1, -1 do
+			local ft = records[i]
+			local nextFt = records[i + 1]
+			local t = nextFt.Time - ft.Time -- 当前层花费的时间 = 到达下一层的时间 - 到达本层的时间
+
+			-- 统一使用主题普通按钮颜色
+			local R = ThemeManager:GetButtonColor().R
+			local G = ThemeManager:GetButtonColor().G
+			local B = ThemeManager:GetButtonColor().B
+			local A = 0.8
+			local barColor = Color(R, G, B, A)
+
+			-- 四舍五入
+			local roundedMs = t + 500
+			local tComp = ConvertMilliseconds(roundedMs)
+			local txt = string.format("%ds", tComp.Seconds)
+			if tComp.Minutes > 0 then
+				txt = string.format("%dm%ds", tComp.Minutes, tComp.Seconds)
+			end
+
+			local hScale = 0.6 -- 降低柱子高度放大倍数，让柱子变矮
+			local barHeight = t * l * 10 * hScale -- 柱子的实际像素高度
+			local scaleY = barHeight / 2 -- TextBoxSprite 是 2x2 的，所以 scaleY 是高度的一半
+
+			local wScale = 4.0 -- 柱子宽度放大倍数 (让柱子变粗)
+			local baseW = 2 - max / 20
+			local scaleX = baseW * wScale
+
+			-- 绘制柱子主体 (使用类似按钮的 Layer 渲染方式实现描边)
+			TextBoxSprite.Color = barColor
+			TextBoxSprite:SetFrame(1)
+
+			-- 左上角坐标
+			local renderPos = Vector(px - i * dx - scaleX, py - barHeight)
+
+			-- 渲染 Layer 0 (带描边的底图)
+			TextBoxSprite.Scale = Vector(scaleX, scaleY)
+			TextBoxSprite:RenderLayer(0, renderPos)
+
+			-- 渲染 Layer 1 (内部纯色填充，稍微缩小并偏移)
+			-- 确保高度足够时才缩小，避免极短的柱子渲染异常
+			local innerScaleY = math.max(0, scaleY - 1)
+			local innerScaleX = math.max(0, scaleX - 1)
+			if innerScaleY > 0 and innerScaleX > 0 then
+				TextBoxSprite.Scale = Vector(innerScaleX, innerScaleY)
+				TextBoxSprite:RenderLayer(1, renderPos + Vector(1, 1))
+			end
+
+			-- 绘制层数图标
+			local stageIconFrames = {
+				[1] = { [0] = 0, [1] = 1, [2] = 2, [4] = 19, [5] = 20 },
+				[2] = { [0] = 0, [1] = 1, [2] = 2, [4] = 19, [5] = 20 },
+				[3] = { [0] = 3, [1] = 4, [2] = 5, [4] = 21, [5] = 22 },
+				[4] = { [0] = 3, [1] = 4, [2] = 5, [4] = 21, [5] = 22 },
+				[5] = { [0] = 6, [1] = 7, [2] = 8, [4] = 23, [5] = 24 },
+				[6] = { [0] = 6, [1] = 7, [2] = 8, [4] = 23, [5] = 24 },
+				[7] = { [0] = 9, [1] = 10, [2] = 11, [4] = 25, [5] = 26 },
+				[8] = { [0] = 9, [1] = 10, [2] = 11, [4] = 25, [5] = 26 },
+				[9] = { [0] = 12 },
+				[10] = { [0] = 13, [1] = 14 },
+				[11] = { [0] = 15, [1] = 16 },
+				[12] = { [0] = 18 },
+				[13] = { [0] = 27 },
+			}
+
+			local iconFrame = 17 -- 默认图标
+			if ft.IsAscent then
+				iconFrame = 17 -- 回溯统一使用默认图标
+			elseif stageIconFrames[ft.LevelStage] and stageIconFrames[ft.LevelStage][ft.StageType] then
+				iconFrame = stageIconFrames[ft.LevelStage][ft.StageType]
+			end
+
+			StageIconSprite:SetFrame("Levels", iconFrame)
+			StageIconSprite.Color = Color(1, 1, 1, A)
+			StageIconSprite:Render(Vector(px - i * dx, py + 3.5))
+
+			-- 绘制层数文本 (智能折行)
+			local stageNameInfo = BISAI_PLUS.GameUtils.GetStageInfo(ft)
+			local stageName = stageNameInfo.Name
+			local textColor = ThemeManager:GetTextColor()
+
+			-- 一个中文字符的宽度大概是字体原本宽度的对应缩放
+			-- 如果字符串长度超过某个阈值 (例如包含 "地下室" 这类或者长度较长)，尝试按空格或者居中附近拆分成两行
+			local line1 = stageName
+			local line2 = ""
+
+			-- 简单的硬编码长度/关键字截断
+			local len = utf8.len(stageName)
+			if len and len > 3 then
+				-- 寻找 I 或 II 这样带罗马数字或空格的部分，从这里裁断最为自然
+				local spaceIndex = string.find(stageName, " ")
+				if spaceIndex then
+					line1 = string.sub(stageName, 1, spaceIndex - 1)
+					line2 = string.sub(stageName, spaceIndex + 1)
+				elseif string.find(stageName, "地下室") and len > 4 then
+					-- 处理燃烧地下室这种
+					line1 = string.match(stageName, "(.*地下室)")
+					line2 = string.match(stageName, "地下室(.*)")
+					if not line1 or not line2 or line2 == "" then
+						line1 = string.sub(stageName, 1, 6)
+						line2 = string.sub(stageName, 7)
+					end
+				else
+					-- 兜底逻辑：简单的对半切
+					local half = math.ceil(len / 2)
+					line1 = string.sub(stageName, 1, half * 3) -- UTF8汉字通常占3字节
+					line2 = string.sub(stageName, half * 3 + 1)
+				end
+			end
+
+			-- 处理部分包含罗马数字后缀产生的多余空格前缀
+			line2 = string.gsub(line2, "^%s+", "")
+
+			-- 统一第一行的高度为 py + 18
+			local yOffset = py + 18
+
+			local line1W = FontOutline:GetStringWidthUTF8(line1) * 0.5
+			FontOutline:DrawStringScaledUTF8(
+				line1,
+				px - i * dx - line1W / 2,
+				yOffset,
+				0.5,
+				0.5,
+				KColor(textColor.Red, textColor.Green, textColor.Blue, 1),
+				0,
+				false
+			)
+
+			-- 如果有第二行，画在下面
+			if line2 ~= "" then
+				local line2W = FontOutline:GetStringWidthUTF8(line2) * 0.5
+				FontOutline:DrawStringScaledUTF8(
+					line2,
+					px - i * dx - line2W / 2,
+					yOffset + 9, -- 下移 9 像素
+					0.5,
+					0.5,
+					KColor(textColor.Red, textColor.Green, textColor.Blue, 1),
+					0,
+					false
+				)
+			end
+
+			-- 绘制时间文本 (缩小字体并手动居中，贴近柱状图顶部)
+			local txtW = FontOutline:GetStringWidthUTF8(txt) * 0.5
+			FontOutline:DrawStringScaledUTF8(
+				txt,
+				px - i * dx - txtW / 2,
+				py - 8 - barHeight,
+				0.5,
+				0.5,
+				KColor(textColor.Red, textColor.Green, textColor.Blue, 1),
+				0,
+				false
+			)
+		end
+	end
+end
+
 local function RenderHud()
 	-- ===========================
 	-- 配置与状态获取
@@ -1300,7 +1495,8 @@ local function RenderHud()
 		local goalName = goalInfo and goalInfo.Name or "未知目标"
 		local finishMsg = string.format("你击败了%s!\n用时：%s", goalName, timeStr)
 
-		Utils.DrawMultiLineText(FontOutline, finishMsg, 140, 150, 2, cWhite)
+		RenderTimeStatistics()
+		Utils.DrawMultiLineText(FontOutline, finishMsg, 140, 135, 2, cWhite)
 	end
 
 	-- ===========================
