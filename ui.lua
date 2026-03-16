@@ -215,9 +215,6 @@ end
 
 local function UpdateRuntimeData(payload)
 	Utils.DeepAssignExisting(Data.Runtime, payload)
-	local recordStageInfo = BISAI_PLUS.GameUtils.GetStageInfo(Data.Runtime.Record)
-	Data.Runtime.Record.LevelWeight = recordStageInfo.Weight
-	Data.Runtime.Record.LevelName = recordStageInfo.Name
 end
 
 local function UpdateWindowBackColors()
