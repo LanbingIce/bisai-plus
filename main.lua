@@ -97,6 +97,8 @@ local DEFAULT_RECORD = {
 	StageType = 0,
 	IsAscent = false,
 	IsXL = false,
+	LevelWeight = 0,
+	LevelName = "未知",
 }
 
 local DEFAULT_DATA = {
@@ -190,6 +192,11 @@ local function GetCandidateRecord()
 		IsAscent = level:IsAscent(),
 		IsXL = level:GetCurses() & LevelCurse.CURSE_OF_LABYRINTH == LevelCurse.CURSE_OF_LABYRINTH,
 	}
+	
+	local recordStageInfo = GameUtils.GetStageInfo(candidateRecord)
+	candidateRecord.LevelWeight = recordStageInfo.Weight
+	candidateRecord.LevelName = recordStageInfo.Name
+
 	return candidateRecord
 end
 
@@ -449,10 +456,8 @@ end
 local function OnNewLevel()
 	-- 层数记录
 	local candidateRecord = GetCandidateRecord()
-	local currentInfo = GameUtils.GetStageInfo(candidateRecord)
-	local recordInfo = GameUtils.GetStageInfo(Data.Save.Record)
 
-	if currentInfo.Weight > recordInfo.Weight then
+	if candidateRecord.LevelWeight > Data.Save.Record.LevelWeight then
 		Data.Save.Record = candidateRecord
 		MessageBus:Emit(Messages.Event.RECORD_UPDATED, GetPayload())
 	end
