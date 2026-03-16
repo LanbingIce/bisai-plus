@@ -111,6 +111,7 @@ local DEFAULT_DATA = {
 			StoredTime = 0,
 		},
 		Record = Utils.DeepCopy(DEFAULT_RECORD),
+		Records = {},
 	},
 	Runtime = {
 		InGame = false,
@@ -216,6 +217,11 @@ local function LoadModData()
 		local success, data = pcall(Json.decode, BISAI_PLUS:LoadData())
 		if success and data then
 			Utils.DeepAssignExisting(Data.Save, data.Save or {})
+
+			if data.Save and data.Save.Records then
+				Data.Save.Records = Utils.DeepCopy(data.Save.Records)
+			end
+
 			config = data.Config or config
 		end
 	end
@@ -245,6 +251,7 @@ local function SaveModData()
 				StoredTime = Data.Save.Timer.StoredTime,
 			},
 			Record = GetRecord(),
+			Records = Data.Save.Records,
 		},
 		Config = ConfigManager:GetConfig(),
 	}
@@ -316,6 +323,7 @@ local function HandleCreateRun()
 	ResetTimer()
 	Data.Save.DeathCount = 0
 	Data.Save.Record = Utils.DeepCopy(DEFAULT_RECORD)
+	Data.Save.Records = {}
 
 	SaveModData()
 	local seedStr = tostring(Game():GetSeeds():GetStartSeedString())
@@ -332,6 +340,8 @@ local function HandleStartRun(payload)
 	Data.Save.PlayerName = payload.PlayerName
 	Data.Save.DeathCount = 0
 	Data.Save.Record = GetCandidateRecord()
+	Data.Save.Records = {}
+	table.insert(Data.Save.Records, Data.Save.Record)
 	SaveModData()
 	MessageBus:Emit(Messages.Event.RUN_STARTED, GetPayload())
 end
@@ -397,6 +407,7 @@ local function CheckTrophyAnimationFinished(player)
 		local candidateRecord = GetCandidateRecord()
 
 		Data.Save.Record = candidateRecord
+		table.insert(Data.Save.Records, candidateRecord)
 		MessageBus:Emit(Messages.Event.RECORD_UPDATED, GetPayload())
 
 		MessageBus:Emit(Messages.Event.RUN_FINISHED, GetPayload())
@@ -475,6 +486,7 @@ local function OnNewLevel()
 
 	if candidateRecord.LevelWeight > Data.Save.Record.LevelWeight then
 		Data.Save.Record = candidateRecord
+		table.insert(Data.Save.Records, candidateRecord)
 		MessageBus:Emit(Messages.Event.RECORD_UPDATED, GetPayload())
 	end
 end
