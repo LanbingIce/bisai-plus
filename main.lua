@@ -122,6 +122,7 @@ local GameUtils = include("game_utils")
 BISAI_PLUS.GameUtils = GameUtils
 
 local Dispatcher = require("bisai+.dispatcher")
+Dispatcher:Clear()
 BISAI_PLUS.Dispatcher = Dispatcher
 
 local DEFAULT_RECORD = {
@@ -158,6 +159,10 @@ local Data = Utils.DeepCopy(DEFAULT_DATA)
 
 BISAI_PLUS.Data = Data
 
+local Messages = require("bisai+.messages")
+local MessageBus = require("bisai+.message_bus")
+MessageBus:Clear()
+
 include("plugins.card_emperor") -- 修改皇帝卡效果，向着BOSS房方向前进4格，如果有塔罗牌桌布，改为6格
 include("plugins.fix_teleport_softlock") -- 修复进房间立刻使用传送主动会卡住的问题
 include("plugins.goal_ultra_greed") -- 大贪婪终点的BOSS实现
@@ -192,12 +197,7 @@ include("plugins.trinket_cursed_penny") -- 咒币效果修改，触发时掉落�
 
 local Json = require("json")
 
-local Messages = require("bisai+.messages")
-local MessageBus = require("bisai+.message_bus")
 local ConfigManager = require("bisai+.config_manager")
-
-MessageBus:Clear()
-Dispatcher:Clear()
 
 include("effect_manager")
 
