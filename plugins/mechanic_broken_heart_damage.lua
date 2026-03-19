@@ -4,7 +4,7 @@ local function OnEvaluateCache(_, player, cacheFlag)
 	end
 
 	local data = player:GetData()
-	if cacheFlag == CacheFlag.CACHE_DAMAGE and data.TargetBrokenHearts then
+	if cacheFlag == CacheFlag.CACHE_DAMAGE and data.BisaiPlus_TargetBrokenHearts then
 		local currentBrokenHearts = player:GetBrokenHearts()
 
 		-- 骨哥需要把本体和灵魂的碎心加起来

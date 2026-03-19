@@ -37,7 +37,7 @@ end
 ---@param targetAmount integer
 local function AddBrokenHeartStep(player, targetAmount)
 	local data = player:GetData()
-	data.TargetBrokenHearts = targetAmount
+	data.BisaiPlus_TargetBrokenHearts = targetAmount
 	-- 1. 检查是否已达到或超过目标
 	if player:GetBrokenHearts() >= targetAmount then
 		return
@@ -160,14 +160,14 @@ local function OnPlayerUpdate(_, player)
 		-- 如果角色正在死亡，给2.5秒的冷却时间，结束之后再进行碎心添加
 		local sprite = player:GetSprite()
 		if sprite:IsPlaying("Death") or sprite:IsPlaying("LostDeath") or sprite:IsPlaying("ForgottenDeath") then
-			data.BrokenHeartCooldown = 150
+			data.BisaiPlus_BrokenHeartCooldown = 150
 		end
 
 		-- 死亡复活期间，不进行碎心的添加，防止反复去世
-		if data.BrokenHeartCooldown then
-			data.BrokenHeartCooldown = data.BrokenHeartCooldown - 1
-			if data.BrokenHeartCooldown < 1 then
-				data.BrokenHeartCooldown = nil
+		if data.BisaiPlus_BrokenHeartCooldown then
+			data.BisaiPlus_BrokenHeartCooldown = data.BisaiPlus_BrokenHeartCooldown - 1
+			if data.BisaiPlus_BrokenHeartCooldown < 1 then
+				data.BisaiPlus_BrokenHeartCooldown = nil
 			end
 			break
 		end
