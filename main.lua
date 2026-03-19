@@ -409,7 +409,7 @@ local function CheckTrophyAnimationFinished(player)
 	local state = Data.Save.State
 
 	-- 是否在举起奖杯动画中
-	if not data.TrophyPickupFrame then
+	if not data.BisaiPlus_TrophyPickupFrame then
 		return
 	end
 
@@ -419,13 +419,13 @@ local function CheckTrophyAnimationFinished(player)
 	end
 
 	-- 计算举起奖杯已经过的帧数
-	local framesSinceTrophyPickup = Game():GetFrameCount() - data.TrophyPickupFrame
+	local framesSinceTrophyPickup = Game():GetFrameCount() - data.BisaiPlus_TrophyPickupFrame
 	-- 结算情况1：动画结束
 	-- 结算情况2：举起奖杯超过35帧（满碎心情况下举奖杯动画结束之后会死亡，因此在死亡的前1帧结算）
 	local isTrophySecured = player:IsExtraAnimationFinished() or framesSinceTrophyPickup >= 35
 
 	if isTrophySecured then
-		data.TrophyPickupFrame = nil
+		data.BisaiPlus_TrophyPickupFrame = nil
 		player.ControlsEnabled = true
 		player.EntityCollisionClass = EntityCollisionClass.ENTCOLL_ALL
 
@@ -458,7 +458,7 @@ local function HandleTrophyPickup(player)
 				-- 动画结束之后，地上的不可见的奖杯会使得游戏通关，因此需要先把它移除掉
 				trophy:Remove()
 				-- 为了让选手在满碎心状态下能举起奖杯，记录一下当前帧数，这样可以在死前一帧结算奖杯
-				data.TrophyPickupFrame = Game():GetFrameCount()
+				data.BisaiPlus_TrophyPickupFrame = Game():GetFrameCount()
 			end
 		end
 	end

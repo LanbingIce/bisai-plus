@@ -172,7 +172,7 @@ local function OnNewRoom()
 	for i = 0, Game():GetNumPlayers() - 1 do
 		local player = Game():GetPlayer(i)
 		local data = player:GetData()
-		data.IsAddicted = nil
+		data.BisaiPlus_IsAddicted = nil
 	end
 
 	-- 大贪婪终点，凹凸房间生成按钮
@@ -242,7 +242,7 @@ local function OnEntityTakeDamage(_, entity, amount, damageFlags, source, countd
 	end
 
 	-- 确保角色没有吃上瘾药
-	if player:GetData().IsAddicted then
+	if player:GetData().BisaiPlus_IsAddicted then
 		return
 	end
 
@@ -299,7 +299,7 @@ local function OnUsePill(_, pillEffect, player, useFlags)
 	if pillEffect ~= PillEffect.PILLEFFECT_ADDICTED then
 		return
 	end
-	player:GetData().IsAddicted = true
+	player:GetData().BisaiPlus_IsAddicted = true
 end
 
 BISAI_PLUS:AddCallback(ModCallbacks.MC_NPC_UPDATE, OnNPCUpdate)
