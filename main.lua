@@ -153,6 +153,7 @@ local DEFAULT_DATA = {
 			StartTime = 0,
 		},
 	},
+	PluginSave = {},
 }
 
 local Data = Utils.DeepCopy(DEFAULT_DATA)
@@ -163,37 +164,55 @@ local Messages = require("bisai+.messages")
 local MessageBus = require("bisai+.message_bus")
 MessageBus:Clear()
 
-include("plugins.card_emperor") -- 修改皇帝卡效果，向着BOSS房方向前进4格，如果有塔罗牌桌布，改为6格
-include("plugins.fix_teleport_softlock") -- 修复进房间立刻使用传送主动会卡住的问题
-include("plugins.goal_ultra_greed") -- 大贪婪终点的BOSS实现
-include("plugins.item_d4") -- 修改D4效果，使用后，移除最后八分之一数量的道具，向上取整
-include("plugins.mechanic_ban_input") -- 准备阶段和暂停状态禁止任何角色操作
-include("plugins.mechanic_broken_heart_damage") -- 超时加碎心之后，根据碎心数量增加攻击力
-include("plugins.mechanic_chest_to_trophy") -- 将通关大宝箱替换为奖杯
-include("plugins.mechanic_disable_lamb_collision") -- 掉落奖杯时，移除羔羊身体的碰撞箱并使其半透明，防止选手拿不到奖杯
-include("plugins.mechanic_identify_amnesia_pill") -- 获得失忆症药丸时，立刻将其识别
-include("plugins.mechanic_kill_lost") -- 如果lost碎心满了，切换房间时处死lost，解决lost在碎心满了之后还能继续比赛的问题
-include("plugins.mechanic_minecart_button") -- 在见证者路线里，矿层只需要踩一个按钮就可以进入逃亡区域
-include("plugins.mechanic_polaroid_negative") -- 根据终点，自动把全家福修改为底片或者把底片修改为全家福
-include("plugins.mechanic_remove_beast_cutscene") -- 祸兽播放死亡动画时直接移除，防止全屏变白
-include("plugins.mechanic_remove_curses") -- 移除黑暗诅咒和迷路诅咒，第二章节及之后移除XL诅咒
-include("plugins.mechanic_reveal_rooms") -- 在见证者路线的前两章节的支线层中，揭示白火房间、镜子房间、刀柄房间、矿车房间的位置。
-include("plugins.mechanic_revive") -- 结算之后，让玩家免死
-include("plugins.mechanic_stop_game_time") -- 准备时，暂停游戏时间
-include("plugins.mechanic_time_limit") -- 时间限制，超过30分钟根据时间增加碎心
-include("plugins.mechanic_void_map") -- 百变怪终点，进入虚空时显示地图
-include("plugins.mechanic_void_portal") -- 教堂/阴间如果没有对应的全家福/底片，宝箱被替换为虚空门
-include("plugins.mechanic_wrong_goal_void_portal") -- 误入其他终点的最终房间之后，击杀最终BOSS生成虚空门
-include("plugins.route_beast_close_door") -- 祸兽路线，关闭错误的门，防止选手走错
-include("plugins.route_beast_mom_exit") -- 祸兽路线击杀妈腿之后，允许离开BOSS房
-include("plugins.route_delirium_trophy") -- 百变怪房间始终生成奖杯
-include("plugins.route_mega_satan_key") -- 大撒旦终点给钥匙碎片
-include("plugins.route_mother_close_door") -- 见证者路线，关闭错误的门，防止选手走错
-include("plugins.route_mother_knife_check") -- 见证者路线如果不拿剧情刀碎片，就禁止下层
-include("plugins.route_mother_open_door") -- 见证者路线自动无代价开启支线门
-include("plugins.route_path_restriction") -- 妈心和凹凸层防止防止走到错误的天堂/地狱层
-include("plugins.trinket_broken_remote") -- 修改破传效果，触发时掉落在地上
-include("plugins.trinket_cursed_penny") -- 咒币效果修改，触发时掉落在地上
+function BISAI_PLUS.LoadPlugin(pluginName)
+	BISAI_PLUS.CurrentPluginAPI = {
+		Name = pluginName,
+		GetSaveData = function()
+			return BISAI_PLUS.Data.PluginSave[pluginName]
+		end,
+		SetSaveData = function(data)
+			BISAI_PLUS.Data.PluginSave[pluginName] = data
+		end,
+		ClearSaveData = function()
+			BISAI_PLUS.Data.PluginSave[pluginName] = nil
+		end,
+	}
+	include("plugins." .. pluginName)
+	BISAI_PLUS.CurrentPluginAPI = nil
+end
+
+BISAI_PLUS.LoadPlugin("card_emperor") -- 修改皇帝卡效果，向着BOSS房方向前进4格，如果有塔罗牌桌布，改为6格
+BISAI_PLUS.LoadPlugin("fix_teleport_softlock") -- 修复进房间立刻使用传送主动会卡住的问题
+BISAI_PLUS.LoadPlugin("goal_ultra_greed") -- 大贪婪终点的BOSS实现
+BISAI_PLUS.LoadPlugin("item_d4") -- 修改D4效果，使用后，移除最后八分之一数量的道具，向上取整
+BISAI_PLUS.LoadPlugin("mechanic_ban_input") -- 准备阶段和暂停状态禁止任何角色操作
+BISAI_PLUS.LoadPlugin("mechanic_broken_heart_damage") -- 超时加碎心之后，根据碎心数量增加攻击力
+BISAI_PLUS.LoadPlugin("mechanic_chest_to_trophy") -- 将通关大宝箱替换为奖杯
+BISAI_PLUS.LoadPlugin("mechanic_disable_lamb_collision") -- 掉落奖杯时，移除羔羊身体的碰撞箱并使其半透明，防止选手拿不到奖杯
+BISAI_PLUS.LoadPlugin("mechanic_identify_amnesia_pill") -- 获得失忆症药丸时，立刻将其识别
+BISAI_PLUS.LoadPlugin("mechanic_kill_lost") -- 如果lost碎心满了，切换房间时处死lost，解决lost在碎心满了之后还能继续比赛的问题
+BISAI_PLUS.LoadPlugin("mechanic_minecart_button") -- 在见证者路线里，矿层只需要踩一个按钮就可以进入逃亡区域
+BISAI_PLUS.LoadPlugin("mechanic_polaroid_negative") -- 根据终点，自动把全家福修改为底片或者把底片修改为全家福
+BISAI_PLUS.LoadPlugin("mechanic_remove_beast_cutscene") -- 祸兽播放死亡动画时直接移除，防止全屏变白
+BISAI_PLUS.LoadPlugin("mechanic_remove_curses") -- 移除黑暗诅咒和迷路诅咒，第二章节及之后移除XL诅咒
+BISAI_PLUS.LoadPlugin("mechanic_reveal_rooms") -- 在见证者路线的前两章节的支线层中，揭示白火房间、镜子房间、刀柄房间、矿车房间的位置。
+BISAI_PLUS.LoadPlugin("mechanic_revive") -- 结算之后，让玩家免死
+BISAI_PLUS.LoadPlugin("mechanic_stop_game_time") -- 准备时，暂停游戏时间
+BISAI_PLUS.LoadPlugin("mechanic_time_limit") -- 时间限制，超过30分钟根据时间增加碎心
+BISAI_PLUS.LoadPlugin("mechanic_void_map") -- 百变怪终点，进入虚空时显示地图
+BISAI_PLUS.LoadPlugin("mechanic_void_portal") -- 教堂/阴间如果没有对应的全家福/底片，宝箱被替换为虚空门
+BISAI_PLUS.LoadPlugin("mechanic_wrong_goal_void_portal") -- 误入其他终点的最终房间之后，击杀最终BOSS生成虚空门
+BISAI_PLUS.LoadPlugin("route_beast_close_door") -- 祸兽路线，关闭错误的门，防止选手走错
+BISAI_PLUS.LoadPlugin("route_beast_mom_exit") -- 祸兽路线击杀妈腿之后，允许离开BOSS房
+BISAI_PLUS.LoadPlugin("route_delirium_trophy") -- 百变怪房间始终生成奖杯
+BISAI_PLUS.LoadPlugin("route_mega_satan_key") -- 大撒旦终点给钥匙碎片
+BISAI_PLUS.LoadPlugin("route_mother_close_door") -- 见证者路线，关闭错误的门，防止选手走错
+BISAI_PLUS.LoadPlugin("route_mother_knife_check") -- 见证者路线如果不拿剧情刀碎片，就禁止下层
+BISAI_PLUS.LoadPlugin("route_mother_open_door") -- 见证者路线自动无代价开启支线门
+BISAI_PLUS.LoadPlugin("route_path_restriction") -- 妈心和凹凸层防止防止走到错误的天堂/地狱层
+BISAI_PLUS.LoadPlugin("trinket_broken_remote") -- 修改破传效果，触发时掉落在地上
+BISAI_PLUS.LoadPlugin("trinket_cursed_penny") -- 咒币效果修改，触发时掉落在地上
+
 
 local Json = require("json")
 
@@ -254,6 +273,9 @@ local function LoadModData()
 			if data.Save and data.Save.Records then
 				Data.Save.Records = Utils.DeepCopy(data.Save.Records)
 			end
+			if data.PluginSave then
+				Data.PluginSave = Utils.DeepCopy(data.PluginSave)
+			end
 
 			config = data.Config or config
 		end
@@ -286,6 +308,7 @@ local function SaveModData()
 			Record = GetRecord(),
 			Records = Data.Save.Records,
 		},
+		PluginSave = Data.PluginSave,
 		Config = ConfigManager:GetConfig(),
 	}
 
