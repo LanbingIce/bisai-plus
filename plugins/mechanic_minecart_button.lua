@@ -1,4 +1,8 @@
 local function SpawnFloor(room, gridIndex)
+	-- 如果对应的位置不是深渊，这里会取到nil，直接返回就好了
+	if not room:GetGridEntity(gridIndex) then
+		return
+	end
 	-- 将深渊移除，这样就能铺路了
 	room:RemoveGridEntity(gridIndex, 0, false)
 
@@ -56,6 +60,10 @@ local function HandleGridEntity(room, i)
 	door:TryUnlock(Game():GetPlayer(0), true)
 
 	-- 铺路，两个位置对应踩下外面两个黄色按钮会出现的地面
+	-- 大多数情况下，这两个位置的ID是82和112，有较小概率是67和97，所以四个位置都尝试铺一下
+	SpawnFloor(room, 67)
+	SpawnFloor(room, 97)
+
 	SpawnFloor(room, 82)
 	SpawnFloor(room, 112)
 
