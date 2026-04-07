@@ -1497,6 +1497,9 @@ local function RenderHud()
 
 		RenderTimeStatistics()
 		Utils.DrawMultiLineText(FontOutline, finishMsg, 140, 135, 2, cWhite)
+	elseif Data.Runtime.State == Shared.State.PAUSED then
+		-- 暂停状态下，也显示时间统计
+		RenderTimeStatistics()
 	end
 
 	-- ===========================
