@@ -1,7 +1,8 @@
-local ActiveCooldowns = 0
 local function OnInputAction(_, entity, inputHook, action)
 	-- 进房间的第一帧，禁止使用主动，防止出现传送类主动卡住的bug
-	if ActiveCooldowns == 0 then
+	local roomFrameCount = Game():GetRoom():GetFrameCount()
+	-- 不是第一帧的话，就放行
+	if roomFrameCount > 1 then
 		return
 	end
 	if not entity then
@@ -24,16 +25,4 @@ local function OnInputAction(_, entity, inputHook, action)
 	return false
 end
 
-local function OnNewRoom()
-	ActiveCooldowns = 1
-end
-
-local function OnUpdate()
-	if ActiveCooldowns > 0 then
-		ActiveCooldowns = ActiveCooldowns - 1
-	end
-end
-
 BISAI_PLUS:AddCallback(ModCallbacks.MC_INPUT_ACTION, OnInputAction)
-BISAI_PLUS:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, OnNewRoom)
-BISAI_PLUS:AddCallback(ModCallbacks.MC_POST_UPDATE, OnUpdate)
