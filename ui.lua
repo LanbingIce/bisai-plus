@@ -40,6 +40,7 @@ local WindowName = {
 	CUSTOM_THEME = "bisai+_custom_theme_win",
 	CONTROL = "bisai+_controls_win",
 	HELP = "bisai+_help_win",
+	CHANGE_GOAL = "bisai+_change_goal_win",
 }
 
 local Data = {
@@ -804,6 +805,45 @@ local function EnsureHelpWindow()
 	end)
 end
 
+local function EnsureChangeGoalWindow()
+	local winName = WindowName.CHANGE_GOAL
+	if WGA.Windows.menus[winName] then
+		return
+	end
+
+	if WGA.MenuData[winName] then
+		WGA.MenuData[winName].sortList = {}
+		WGA.MenuData[winName].Buttons = {}
+	end
+
+	local winW = 100
+	local itemSize = Vector(84, 12)
+	local gapY = 1
+	local winH = math.max(40, 16 + #Shared.GoalData * (itemSize.Y + gapY) + 8)
+
+	local mainWinSize = Vector(160, 110)
+	local mainWinPos = Vector(60, 40)
+	local winPos = Vector(mainWinPos.X + mainWinSize.X + 10, mainWinPos.Y)
+
+	local window = WGA.ShowWindow(winName, winPos, Vector(winW, winH))
+	window.backcolor = ThemeManager:GetWindowColor()
+	window.backcolornfocus = ThemeManager:GetWindowUnfocusedColor()
+
+	for i, item in ipairs(Shared.GoalData) do
+		AddStyledButton(
+			winName,
+			Vector(8, 20) + Vector(0, (i - 1) * (itemSize.Y + gapY)),
+			itemSize,
+			item.Name,
+			function(button)
+				if button == 0 then
+					MessageBus:Send(Messages.Command.SET_GOAL, { Goal = i })
+				end
+			end
+		)
+	end
+end
+
 local function EnsureControlsWindow()
 	if WGA.Windows.menus[WindowName.CONTROL] then
 		return
@@ -858,12 +898,35 @@ local function EnsureControlsWindow()
 		AddStyledButton(
 			WindowName.CONTROL,
 			Vector(paddingLeft, currentY),
-			Vector(btnW, btnH),
+			Vector(halfBtnW, btnH),
 			"继续 (Enter)",
 			function(btn)
 				if btn == 0 then
 					MessageBus:Send(Messages.Command.RESUME_RUN)
 					WGA.CloseWindow(WindowName.CONTROL)
+				end
+			end
+		)
+
+		AddStyledButton(
+			WindowName.CONTROL,
+			Vector(paddingLeft + halfBtnW + gapX, currentY),
+			Vector(halfBtnW, btnH),
+			"更换终点",
+			function(btn)
+				if btn == 0 then
+					EnsureChangeGoalWindow()
+					WGA.SelectedMenu = WindowName.CHANGE_GOAL
+					local wind = WGA.Windows
+					if wind and wind.order then
+						for i, name in ipairs(wind.order) do
+							if name == WindowName.CHANGE_GOAL then
+								table.remove(wind.order, i)
+								table.insert(wind.order, 1, WindowName.CHANGE_GOAL)
+								break
+							end
+						end
+					end
 				end
 			end
 		)
@@ -873,7 +936,7 @@ local function EnsureControlsWindow()
 	AddStyledButton(
 		WindowName.CONTROL,
 		Vector(paddingLeft, currentY),
-		Vector(btnW, btnH),
+		showResume and Vector(halfBtnW, btnH) or Vector(btnW, btnH),
 		"新开局 (Ctrl+Enter)",
 		function(b)
 			if b == 0 and Input.IsActionPressed(ButtonAction.ACTION_DROP, Data.Runtime.ControllerIndex) then
@@ -885,6 +948,21 @@ local function EnsureControlsWindow()
 			return Input.IsActionPressed(ButtonAction.ACTION_DROP, Data.Runtime.ControllerIndex)
 		end
 	)
+
+	if showResume then
+		AddStyledButton(
+			WindowName.CONTROL,
+			Vector(paddingLeft + halfBtnW + gapX, currentY),
+			Vector(halfBtnW, btnH),
+			Options.DebugConsoleEnabled and "禁用控制台" or "启用控制台",
+			function(b)
+				if b == 0 then
+					Options.DebugConsoleEnabled = not Options.DebugConsoleEnabled
+					WGA.CloseWindow(WindowName.CONTROL)
+				end
+			end
+		)
+	end
 	currentY = currentY + btnH + gapY
 
 	AddStyledButton(WindowName.CONTROL, Vector(paddingLeft, currentY), Vector(halfBtnW, btnH), "主题", function(btn)
@@ -1119,6 +1197,14 @@ function EnsureMainWindow()
 
 			Utils.DrawMultiLineText(FontPlain, item.Desc, pos.X, currentY, 0.5, color)
 		end)
+	end
+end
+
+local function SetChangeGoalWindowExits(exits)
+	if exits then
+		EnsureChangeGoalWindow()
+	elseif WGA.Windows.menus[WindowName.CHANGE_GOAL] then
+		WGA.CloseWindow(WindowName.CHANGE_GOAL)
 	end
 end
 
@@ -1602,11 +1688,13 @@ end)
 MessageBus:On(Messages.Event.RUN_RESUMED, function(payload)
 	UpdateRuntimeData(payload)
 	SetMainWindowExits(payload.State == Shared.State.READY)
+	SetChangeGoalWindowExits(false)
 end)
 
 MessageBus:On(Messages.Event.RUN_CREATED, function(payload)
 	UpdateRuntimeData(payload)
 	SetMainWindowExits(payload.State == Shared.State.READY)
+	SetChangeGoalWindowExits(false)
 end)
 
 MessageBus:On(Messages.Event.RUN_STARTED, function(payload)
@@ -1628,6 +1716,11 @@ end)
 MessageBus:On(Messages.Event.CONFIG_UPDATED, function(payload)
 	ThemeManager:LoadCustomTheme(payload.Config.CustomTheme)
 	ThemeManager:SetTheme(payload.Config.Theme)
+end)
+
+MessageBus:On(Messages.Event.GOAL_SET, function(payload)
+	UpdateRuntimeData(payload)
+	SetChangeGoalWindowExits(false)
 end)
 
 MessageBus:On(Messages.Event.RECORD_UPDATED, function(payload)

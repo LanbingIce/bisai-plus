@@ -6,7 +6,7 @@ local MessageBus = require("bisai+.message_bus")
 local EffectManager = {}
 
 ---@param payload { Goal: integer }
-function EffectManager.OnRunStarted(payload)
+function EffectManager.OnGoalSet(payload)
 	local goal = payload.Goal
 	local goalInfo = Shared.GoalData[goal]
 	if goalInfo and goalInfo.OnSelect then
@@ -14,6 +14,7 @@ function EffectManager.OnRunStarted(payload)
 	end
 end
 
-MessageBus:On(Messages.Event.RUN_STARTED, EffectManager.OnRunStarted)
+MessageBus:On(Messages.Event.RUN_STARTED, EffectManager.OnGoalSet)
+MessageBus:On(Messages.Event.GOAL_SET, EffectManager.OnGoalSet)
 
 return EffectManager

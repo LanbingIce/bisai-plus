@@ -431,9 +431,18 @@ local function HandleSetSeed(payload)
 	Isaac.ExecuteCommand("seed " .. seedStr)
 end
 local function HandleSetGoal(payload)
-	if Data.Save.State ~= Shared.State.READY then
+	if Data.Save.State ~= Shared.State.PAUSED then
 		return
 	end
+
+	if Data.Save.Goal == Shared.Goal.MEGA_SATAN then
+		for i = 0, Game():GetNumPlayers() - 1 do
+			local player = Isaac.GetPlayer(i)
+			player:RemoveCollectible(CollectibleType.COLLECTIBLE_KEY_PIECE_1)
+			player:RemoveCollectible(CollectibleType.COLLECTIBLE_KEY_PIECE_2)
+		end
+	end
+
 	Data.Save.Goal = payload.Goal
 	MessageBus:Emit(Messages.Event.GOAL_SET, GetPayload())
 end
