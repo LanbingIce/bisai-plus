@@ -538,7 +538,6 @@ local function OnGameStarted(_, isContinued)
 		if not seeds:IsCustomRun() then
 			local seedStr = seeds:GetStartSeedString()
 			Isaac.ExecuteCommand("seed " .. seedStr)
-			break
 		end
 
 		Data.Save.DeathCount = Data.Save.DeathCount + 1
