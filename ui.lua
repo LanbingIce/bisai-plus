@@ -1013,6 +1013,7 @@ function EnsureMainWindow()
 				function(button)
 					if button == 0 then
 						MessageBus:Send(Messages.Command.START_RUN, { Goal = i, PlayerName = GetCurrentPlayerName() })
+						MessageBus:Send(Messages.Command.PAUSE_RUN) -- 开始游戏时先进入暂停状态，防止玩家不小心选错终点
 					end
 				end,
 				function()
@@ -1232,6 +1233,7 @@ local function HandleMenuKeyInput()
 		or Input.IsButtonTriggered(Keyboard.KEY_ENTER, Data.Runtime.ControllerIndex)
 	then
 		MessageBus:Send(Messages.Command.START_RUN, { Goal = Data.Runtime.Goal, PlayerName = GetCurrentPlayerName() })
+		MessageBus:Send(Messages.Command.PAUSE_RUN) -- 开始游戏时先进入暂停状态，防止玩家不小心选错终点
 	end
 end
 
