@@ -83,7 +83,7 @@ local function IsCombinationBanned(playerType, goal, rollingType)
 		if matchPlayer and matchGoal then
 			if rollingType == "goal" and ban.Goal == nil then
 				-- 仅仅ban了角色，不影响roll终点
-			elseif rollingType == "character" and ban.PlayerType == nil then
+			elseif rollingType == "playertype" and ban.PlayerType == nil then
 				-- 仅仅ban了终点，不影响roll角色
 			else
 				return true
@@ -192,19 +192,19 @@ local function RollGoal()
 	Data.Runtime.GoalRollTimer = Data.Runtime.GoalRollSequence[1].delay
 end
 
-local function RollCharacter()
+local function RollPlayerType()
 	SFXManager():Play(SoundEffect.SOUND_CHARACTER_SELECT_LEFT)
-	local character = PlayerType.PLAYER_POSSESSOR
+	local playerType = PlayerType.PLAYER_POSSESSOR
 	local currentGoal = Data.Runtime.Goal
 
-	while character == PlayerType.PLAYER_POSSESSOR or IsCombinationBanned(character, currentGoal, "character") do
-		character = Shared.ValidPlayers[Random() % #Shared.ValidPlayers + 1]
+	while playerType == PlayerType.PLAYER_POSSESSOR or IsCombinationBanned(playerType, currentGoal, "playertype") do
+		playerType = Shared.ValidPlayers[Random() % #Shared.ValidPlayers + 1]
 	end
 	local seed = 0
 	while seed == 0 do
 		seed = Random()
 	end
-	MessageBus:Send(Messages.Command.SELECT_CHARACTER, { PlayerType = character })
+	MessageBus:Send(Messages.Command.SET_PLAYER_TYPE, { PlayerType = playerType })
 	MessageBus:Send(Messages.Command.SET_SEED, { Seed = seed })
 end
 
@@ -1089,7 +1089,7 @@ function EnsureMainWindow()
 
 		AddStyledButton(WindowName.MAIN, Vector(104, 12), Vector(60, 12), "随机角色种子(Q)", function(button)
 			if button == 0 then
-				RollCharacter()
+				RollPlayerType()
 			end
 		end)
 
@@ -1194,7 +1194,7 @@ local function HandleMenuKeyInput()
 	end
 
 	if Input.IsActionTriggered(ButtonAction.ACTION_PILLCARD, Data.Runtime.ControllerIndex) then
-		RollCharacter()
+		RollPlayerType()
 	end
 
 	if Input.IsActionTriggered(ButtonAction.ACTION_BOMB, Data.Runtime.ControllerIndex) then

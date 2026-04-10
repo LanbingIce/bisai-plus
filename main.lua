@@ -416,7 +416,7 @@ local function HandleStartRun(payload)
 	MessageBus:Emit(Messages.Event.RUN_STARTED, GetPayload())
 end
 
-local function HandleSelectCharacter(payload)
+local function HandleSetPlayerType(payload)
 	if Data.Save.State ~= Shared.State.READY then
 		return
 	end
@@ -607,7 +607,7 @@ MessageBus:Handle(Messages.Command.RESUME_RUN, HandleResumeRun)
 MessageBus:Handle(Messages.Command.PAUSE_RUN, HandlePauseRun)
 MessageBus:Handle(Messages.Command.CREATE_RUN, HandleCreateRun)
 MessageBus:Handle(Messages.Command.START_RUN, HandleStartRun)
-MessageBus:Handle(Messages.Command.SELECT_CHARACTER, HandleSelectCharacter)
+MessageBus:Handle(Messages.Command.SET_PLAYER_TYPE, HandleSetPlayerType)
 MessageBus:Handle(Messages.Command.SET_SEED, HandleSetSeed)
 MessageBus:Handle(Messages.Command.SET_GOAL, HandleSetGoal)
 

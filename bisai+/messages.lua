@@ -5,7 +5,7 @@ local Command = {
 	PAUSE_RUN = "cmd.run.pause",
 	RESUME_RUN = "cmd.run.resume",
 	CREATE_RUN = "cmd.run.create",
-	SELECT_CHARACTER = "cmd.character.select",
+	SET_PLAYER_TYPE = "cmd.playertype.set",
 	SET_SEED = "cmd.seed.set",
 	SET_GOAL = "cmd.goal.set",
 }
