@@ -368,7 +368,7 @@ local function HandleUpdateConfig(payload)
 end
 
 local function HandleResumeRun()
-	if Data.Save.State == Shared.State.RUNNING then
+	if Data.Save.State ~= Shared.State.PAUSED then
 		return
 	end
 	Data.Save.State = Shared.State.RUNNING
