@@ -1678,6 +1678,13 @@ local function RenderHud()
 	end
 
 	cursorY = cursorY + lineHeight
+
+	-- [第六行] 版本号 (非运行状态时显示)
+	if Data.Runtime.State ~= Shared.State.RUNNING then
+		local versionColor = KColor(1, 1, 0, 1) -- 黄色
+		local vLabelW = DrawText(FontOutline, "版本：", cursorX, cursorY, versionColor)
+		DrawText(FontMono, "v" .. tostring(BISAI_PLUS.Version), cursorX + vLabelW, cursorY, versionColor)
+	end
 end
 
 MessageBus:On(Messages.Event.RUN_PAUSED, function(payload)
