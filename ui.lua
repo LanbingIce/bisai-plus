@@ -1659,7 +1659,6 @@ local function HandleGoalRolling()
 		if Data.Runtime.GoalRollIndex > #Data.Runtime.GoalRollSequence then
 			-- 滚动结束
 			Data.Runtime.IsRollingGoal = false
-			MessageBus:Send(Messages.Command.SET_GOAL, { Goal = Data.Runtime.TargetGoal })
 		else
 			-- 继续下一步
 			Data.Runtime.GoalRollTimer = Data.Runtime.GoalRollSequence[Data.Runtime.GoalRollIndex].delay

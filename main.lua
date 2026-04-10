@@ -435,6 +435,7 @@ local function HandleSetGoal(payload)
 		return
 	end
 	Data.Save.Goal = payload.Goal
+	MessageBus:Emit(Messages.Event.GOAL_SET, GetPayload())
 end
 
 local function OnUpdate()

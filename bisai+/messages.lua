@@ -20,6 +20,7 @@ local Event = {
 	RUN_RESTORED = "event.run.restored",
 	RUN_FINISHED = "event.run.finished",
 	RECORD_UPDATED = "event.record.updated",
+	GOAL_SET = "event.goal.set",
 }
 
 local Messages = {
