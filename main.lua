@@ -494,6 +494,11 @@ local function CheckTrophyAnimationFinished(player)
 			return
 		end
 
+		-- 如果是暂停状态，先解除暂停状态
+		if state == Shared.State.PAUSED then
+			MessageBus:Send(Messages.Command.RESUME_RUN)
+		end
+
 		Data.Save.State = Shared.State.FINISHED
 		PauseTimer()
 
