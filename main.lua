@@ -212,6 +212,7 @@ BISAI_PLUS.LoadPlugin("fix_teleport_softlock") -- 修复进房间立刻使用传
 BISAI_PLUS.LoadPlugin("goal_ultra_greed") -- 大贪婪终点的BOSS实现
 BISAI_PLUS.LoadPlugin("item_d4") -- 修改D4效果，使用后，移除最后八分之一数量的道具，向上取整
 BISAI_PLUS.LoadPlugin("mechanic_ban_input") -- 准备阶段和暂停状态禁止任何角色操作
+BISAI_PLUS.LoadPlugin("itempool_filter_natural") -- 控制部分道具在野生生成时的权重
 BISAI_PLUS.LoadPlugin("mechanic_room_radar") -- 房间雷达功能
 BISAI_PLUS.LoadPlugin("mechanic_broken_heart_damage") -- 超时加碎心之后，根据碎心数量增加攻击力
 BISAI_PLUS.LoadPlugin("mechanic_chest_to_trophy") -- 将通关大宝箱替换为奖杯
