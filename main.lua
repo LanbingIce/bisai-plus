@@ -1,5 +1,4 @@
 ﻿-- TODO 超级种子功能
--- TODO 去动画
 
 BISAI_PLUS = RegisterMod("bisai+", 1)
 BISAI_PLUS.Version = "1.3.0"
