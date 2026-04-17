@@ -10,8 +10,11 @@ local function OnPlayerUpdate(_, player)
 end
 
 local function OnInputAction(_, entity, inputHook, action)
-	-- 准备阶段禁用丢弃键，禁止丢弃饰品卡牌以及表骨哥切换角色的操作
-	if BISAI_PLUS.Data.Save.State ~= BISAI_PLUS.Shared.State.READY then
+	-- 准备阶段和暂停状态禁用丢弃键，禁止丢弃饰品卡牌以及表骨哥切换角色的操作
+	local state = BISAI_PLUS.Data.Save.State
+	local isPaused = state == BISAI_PLUS.Shared.State.PAUSED or state == BISAI_PLUS.Shared.State.READY
+
+	if not isPaused then
 		return
 	end
 
