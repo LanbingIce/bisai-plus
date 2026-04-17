@@ -115,8 +115,8 @@ v1.1.0：
 其他：
 - 更换了祸兽终点的选择音效，旧的音效太吵了
 - 移除了强行关闭滤镜设置的机制
-- 记录功能现在支持XL诅咒以及回溯路线
-- 比赛开始时，左下角的层数记录不再是“无”，而是当前所在的层数
+- 纪录功能现在支持XL诅咒以及回溯路线
+- 比赛开始时，左下角的层数纪录不再是“无”，而是当前所在的层数
 - 准备状态、暂停状态、结算状态下，左下角的角色、种子、目标显示为绿色
 - 结算时，左下角层数会显示为99层，层名称为完成
 - 移除了背景图片的占位文件，因为占位文件会导致每次更新都需要重新覆盖
@@ -578,7 +578,7 @@ local function OnGameExit()
 end
 
 local function OnNewLevel()
-	-- 层数记录
+	-- 层数纪录
 	local candidateRecord = GetCandidateRecord()
 
 	if candidateRecord.LevelWeight > Data.Save.Record.LevelWeight then

@@ -1649,11 +1649,11 @@ local function RenderHud()
 
 	cursorY = cursorY + lineHeight
 
-	-- [第五行] 最佳记录 (原第三行，下移至此)
+	-- [第五行] 最佳纪录 (原第三行，下移至此)
 	local dynamicX = cursorX
 
 	-- 5.1 画标签
-	dynamicX = dynamicX + DrawText(FontOutline, "记录：", dynamicX, cursorY, cWhite)
+	dynamicX = dynamicX + DrawText(FontOutline, "纪录：", dynamicX, cursorY, cWhite)
 
 	-- 5.2 获取数据
 	local weight = Data.Runtime.Record.LevelWeight
