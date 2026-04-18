@@ -1216,8 +1216,35 @@ local function SetMainWindowExits(exits)
 	end
 end
 
+local function IsConfirmTriggered()
+	-- 拦截暂停状态
+	if Game():IsPaused() then
+		return false
+	end
+
+	local controllerIndex = Data.Runtime.ControllerIndex
+
+	-- 手柄在按下主动键时，会导致触发键盘的方向上键，这可能是个bug
+	-- 不过我们刚好可以用这个方法判断出是手柄按下的主动键
+	local isControllerConfirm = Input.IsActionTriggered(ButtonAction.ACTION_ITEM, controllerIndex)
+		and Input.IsButtonTriggered(Keyboard.KEY_UP, controllerIndex)
+
+	-- 如果手柄已经触发了确认，直接返回 true，彻底省去后续所有计算
+	if isControllerConfirm then
+		return true
+	end
+
+	-- 同理，我们通过键盘的上键未被按下就可以确定是键盘按下的主动键
+	local isKeyboardConfirm = Input.IsButtonTriggered(Keyboard.KEY_ENTER, controllerIndex)
+		or (
+			Input.IsActionTriggered(ButtonAction.ACTION_ITEM, controllerIndex)
+			and not Input.IsButtonTriggered(Keyboard.KEY_UP, controllerIndex)
+		)
+
+	return isKeyboardConfirm
+end
+
 -- TODO: 抽取一下公共逻辑
--- TODO: 处理手柄和键盘键位冲突
 local function HandleGlobalKeyInput()
 	if
 		Data.Runtime.State ~= Shared.State.READY
@@ -1245,10 +1272,7 @@ local function HandleControlsWindowKeyInput()
 		return
 	end
 
-	local isConfirmTriggered = Input.IsButtonTriggered(Keyboard.KEY_ENTER, Data.Runtime.ControllerIndex)
-		or Input.IsActionTriggered(ButtonAction.ACTION_ITEM, Data.Runtime.ControllerIndex)
-
-	if isConfirmTriggered then
+	if IsConfirmTriggered() then
 		if Input.IsActionPressed(ButtonAction.ACTION_DROP, Data.Runtime.ControllerIndex) then
 			if WGA.Windows.menus[WindowName.CONTROL] then
 				WGA.CloseWindow(WindowName.CONTROL)
@@ -1266,6 +1290,10 @@ local function HandleControlsWindowKeyInput()
 end
 
 local function HandleMenuKeyInput()
+	if Game():IsPaused() then
+		return
+	end
+
 	if not WGA.Windows.menus[WindowName.MAIN] then
 		return
 	end
@@ -1782,10 +1810,9 @@ local function OnGetShaderParams(_, name)
 	-- 即使游戏暂停，也继续处理滚动动画
 	HandleGoalRolling()
 
-	if not Game():IsPaused() then
-		HandleMenuKeyInput()
-		HandleControlsWindowKeyInput()
-	end
+	HandleMenuKeyInput()
+
+	HandleControlsWindowKeyInput()
 
 	HandleGlobalKeyInput()
 
