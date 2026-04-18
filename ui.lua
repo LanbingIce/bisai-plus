@@ -1721,6 +1721,11 @@ end
 MessageBus:On(Messages.Event.RUN_PAUSED, function(payload)
 	UpdateRuntimeData(payload)
 	SetMainWindowExits(payload.State == Shared.State.READY)
+
+	-- 有可能是退出游戏引发的事件，这种情况下不会自动关闭控制面板，需要手动关闭
+	if WGA.Windows.menus[WindowName.CONTROL] then
+		WGA.CloseWindow(WindowName.CONTROL)
+	end
 end)
 
 MessageBus:On(Messages.Event.RUN_RESUMED, function(payload)
