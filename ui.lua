@@ -1281,10 +1281,22 @@ local function HandleMenuKeyInput()
 
 	if Input.IsActionTriggered(ButtonAction.ACTION_PILLCARD, Data.Runtime.ControllerIndex) then
 		RollPlayerType()
+		return
 	end
 
 	if Input.IsActionTriggered(ButtonAction.ACTION_BOMB, Data.Runtime.ControllerIndex) then
 		RollGoal()
+		return
+	end
+
+	-- 确认选择
+	if
+		Input.IsActionTriggered(ButtonAction.ACTION_ITEM, Data.Runtime.ControllerIndex)
+		or Input.IsButtonTriggered(Keyboard.KEY_ENTER, Data.Runtime.ControllerIndex)
+	then
+		MessageBus:Send(Messages.Command.START_RUN, { Goal = Data.Runtime.Goal, PlayerName = GetCurrentPlayerName() })
+		MessageBus:Send(Messages.Command.PAUSE_RUN) -- 开始游戏时先进入暂停状态，防止玩家不小心选错终点
+		return
 	end
 
 	-- 上下选择
@@ -1311,15 +1323,6 @@ local function HandleMenuKeyInput()
 		else
 			SFXManager():Play(SoundEffect.SOUND_CHARACTER_SELECT_RIGHT)
 		end
-	end
-
-	-- 确认选择
-	if
-		Input.IsActionTriggered(ButtonAction.ACTION_ITEM, Data.Runtime.ControllerIndex)
-		or Input.IsButtonTriggered(Keyboard.KEY_ENTER, Data.Runtime.ControllerIndex)
-	then
-		MessageBus:Send(Messages.Command.START_RUN, { Goal = Data.Runtime.Goal, PlayerName = GetCurrentPlayerName() })
-		MessageBus:Send(Messages.Command.PAUSE_RUN) -- 开始游戏时先进入暂停状态，防止玩家不小心选错终点
 	end
 end
 
