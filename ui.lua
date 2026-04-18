@@ -1217,11 +1217,6 @@ local function SetMainWindowExits(exits)
 end
 
 local function IsConfirmTriggered()
-	-- 拦截暂停状态
-	if Game():IsPaused() then
-		return false
-	end
-
 	local controllerIndex = Data.Runtime.ControllerIndex
 
 	-- 手柄在按下主动键时，会导致触发键盘的方向上键，这可能是个bug
@@ -1232,6 +1227,11 @@ local function IsConfirmTriggered()
 	-- 如果手柄已经触发了确认，直接返回 true，彻底省去后续所有计算
 	if isControllerConfirm then
 		return true
+	end
+
+	-- 拦截暂停状态
+	if Game():IsPaused() then
+		return false
 	end
 
 	-- 同理，我们通过键盘的上键未被按下就可以确定是键盘按下的主动键
