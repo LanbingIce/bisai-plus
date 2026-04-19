@@ -45,6 +45,8 @@ local WindowName = {
 
 local Data = {
 	Runtime = {
+		LastScreenWidth = Isaac.GetScreenWidth(),
+		LastScreenHeight = Isaac.GetScreenHeight(),
 		PlayerName = "未知角色",
 		DeathCount = 0,
 		ControllerIndex = 0,
@@ -1807,6 +1809,19 @@ local function OnGetShaderParams(_, name)
 	if name ~= "Bisai-RenderAboveHUD" then
 		return
 	end
+
+	-- 当分辨率改变时，如果是准备状态，重新开关一下主界面
+	local sWidth = Isaac.GetScreenWidth()
+	local sHeight = Isaac.GetScreenHeight()
+	if Data.Runtime.LastScreenWidth ~= sWidth or Data.Runtime.LastScreenHeight ~= sHeight then
+		Data.Runtime.LastScreenWidth = sWidth
+		Data.Runtime.LastScreenHeight = sHeight
+		if Data.Runtime.State == Shared.State.READY then
+			SetMainWindowExits(false)
+			SetMainWindowExits(true)
+		end
+	end
+
 	RenderHud()
 	Data.Runtime.ControllerIndex = Game():GetPlayer(0).ControllerIndex
 	-- 更新输入
