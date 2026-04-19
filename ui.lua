@@ -219,6 +219,10 @@ local function GetCurrentPlayerName()
 end
 
 local function UpdateRuntimeData(payload)
+	-- 准备状态下，除非状态改变，不然拒绝更新，因为此时UI层的数据作为主导
+	if Data.Runtime.State == Shared.State.READY and payload.State == Shared.State.READY then
+		return
+	end
 	Utils.DeepAssignExisting(Data.Runtime, payload)
 end
 
