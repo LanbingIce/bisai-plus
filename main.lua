@@ -622,10 +622,11 @@ local function OnGameStarted(_, isContinued)
 	MessageBus:Emit(Messages.Event.RUN_RESTORED, GetPayload())
 	Data.Runtime.InGame = true
 	OnNewRoom()
+	
+	Dispatcher:Run()
 end
 
 local function OnGameExit()
-	Dispatcher:Clear()
 	Data.Runtime.InGame = false
 	MessageBus:Send(Messages.Command.PAUSE_RUN)
 	SaveModData()
