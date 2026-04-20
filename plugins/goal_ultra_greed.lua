@@ -246,6 +246,16 @@ local function OnEntityTakeDamage(_, entity, amount, damageFlags, source, countd
 		return
 	end
 
+	-- 确保角色没有圣饼
+	if player:HasCollectible(CollectibleType.COLLECTIBLE_WAFER) then
+		return
+	end
+
+	-- 确保角色没有圣饼效果
+	if player:GetEffects():HasCollectibleEffect(CollectibleType.COLLECTIBLE_WAFER) then
+		return
+	end
+
 	-- 确保伤害来源是实体
 	local sourceEntity = source.Entity
 	if not sourceEntity then
