@@ -968,10 +968,10 @@ local function EnsureControlsWindow()
 			WindowName.CONTROL,
 			Vector(paddingLeft + halfBtnW + gapX, currentY),
 			Vector(halfBtnW, btnH),
-			Options.DebugConsoleEnabled and "禁用控制台" or "启用控制台",
+			Options.Filter and "禁用滤镜" or "启用滤镜",
 			function(b)
 				if b == 0 then
-					Options.DebugConsoleEnabled = not Options.DebugConsoleEnabled
+					Options.Filter = not Options.Filter
 					SafeCloseWindow(WindowName.CONTROL)
 				end
 			end
