@@ -1241,7 +1241,11 @@ local function IsConfirmTriggered()
 	end
 
 	-- 同理，我们通过键盘的上键未被按下就可以确定是键盘按下的主动键
-	local isKeyboardConfirm = Input.IsButtonTriggered(Keyboard.KEY_ENTER, controllerIndex)
+	-- 另外，按下手柄的右移动键，会触发键盘的回车键，这也是一个bug，所以需要判断没有按下右移动键
+	local isKeyboardConfirm = (
+		Input.IsButtonTriggered(Keyboard.KEY_ENTER, controllerIndex)
+		and not Input.IsActionTriggered(ButtonAction.ACTION_RIGHT, controllerIndex)
+	)
 		or (
 			Input.IsActionTriggered(ButtonAction.ACTION_ITEM, controllerIndex)
 			and not Input.IsButtonTriggered(Keyboard.KEY_UP, controllerIndex)
@@ -1324,10 +1328,7 @@ local function HandleMenuKeyInput()
 	end
 
 	-- 确认选择
-	if
-		Input.IsActionTriggered(ButtonAction.ACTION_ITEM, Data.Runtime.ControllerIndex)
-		or Input.IsButtonTriggered(Keyboard.KEY_ENTER, Data.Runtime.ControllerIndex)
-	then
+	if IsConfirmTriggered() then
 		MessageBus:Send(Messages.Command.START_RUN, { Goal = Data.Runtime.Goal, PlayerName = GetCurrentPlayerName() })
 		MessageBus:Send(Messages.Command.PAUSE_RUN) -- 开始游戏时先进入暂停状态，防止玩家不小心选错终点
 		return
