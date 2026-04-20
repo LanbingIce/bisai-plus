@@ -4,6 +4,7 @@ local Shared = require("bisai+.shared")
 local Messages = require("bisai+.messages")
 local ThemeManager = require("bisai+.theme_manager")
 local Utils = require("bisai+.utils")
+local Dispatcher = require("bisai+.dispatcher")
 
 ---@type wga_menu
 local WGA = include("worst gui api")
@@ -1278,6 +1279,19 @@ local function HandleGlobalKeyInput()
 	then
 		if not SafeCloseWindow(WindowName.CONTROL) then
 			EnsureControlsWindow()
+		end
+	end
+
+	-- 反撇号键启用控制台，丢弃键+反撇号键禁用控制台
+	if Input.IsButtonTriggered(Keyboard.KEY_GRAVE_ACCENT, Data.Runtime.ControllerIndex) then
+		local isDropPressed = Input.IsActionPressed(ButtonAction.ACTION_DROP, Data.Runtime.ControllerIndex)
+		local targetState = not isDropPressed
+		if Options.DebugConsoleEnabled ~= targetState then
+			Options.DebugConsoleEnabled = targetState
+			local message = targetState and "已启用控制台" or "已禁用控制台"
+			Dispatcher:Dispatch(function()
+				Game():GetHUD():ShowFortuneText(message)
+			end)
 		end
 	end
 end
