@@ -218,6 +218,14 @@ local function GetCurrentPlayerName()
 	return name
 end
 
+local function SafeCloseWindow(windowName)
+	if not WGA.Windows.menus[windowName] then
+		return false
+	end
+	WGA.CloseWindow(windowName)
+	return true
+end
+
 local function UpdateRuntimeData(payload)
 	-- 准备状态下，除非状态改变，不然拒绝更新，因为此时UI层的数据作为主导
 	if Data.Runtime.State == Shared.State.READY and payload.State == Shared.State.READY then
@@ -441,12 +449,11 @@ local function EnsureCustomThemeWindow()
 				MessageBus:Send(Messages.Command.UPDATE_CONFIG, { Config = config })
 
 				-- 刷新窗口
-				WGA.CloseWindow(winName)
+				SafeCloseWindow(winName)
 				EnsureCustomThemeWindow()
 
 				-- 如果主窗口开着，也刷新一下
-				if WGA.Windows.menus[WindowName.MAIN] then
-					WGA.CloseWindow(WindowName.MAIN)
+				if SafeCloseWindow(WindowName.MAIN) then
 					EnsureMainWindow()
 				end
 			end
@@ -644,7 +651,7 @@ local function EnsureThemeWindow()
 								MessageBus:Send(Messages.Command.UPDATE_CONFIG, { Config = config })
 
 								-- 刷新自定义主题窗口
-								WGA.CloseWindow(WindowName.CUSTOM_THEME)
+								SafeCloseWindow(WindowName.CUSTOM_THEME)
 								EnsureCustomThemeWindow()
 
 								WGA.SelectedMenu = WindowName.CUSTOM_THEME
@@ -685,7 +692,7 @@ local function EnsureThemeWindow()
 					end
 
 					-- 重新打开窗口以刷新大小和内容
-					WGA.CloseWindow(winName)
+					SafeCloseWindow(winName)
 					EnsureThemeWindow()
 				end
 			end,
@@ -896,7 +903,7 @@ local function EnsureControlsWindow()
 		AddStyledButton(WindowName.CONTROL, Vector(paddingLeft, currentY), Vector(btnW, btnH), "暂停", function(btn)
 			if btn == 0 then
 				MessageBus:Send(Messages.Command.PAUSE_RUN)
-				WGA.CloseWindow(WindowName.CONTROL)
+				SafeCloseWindow(WindowName.CONTROL)
 			end
 		end)
 		currentY = currentY + btnH + gapY
@@ -909,7 +916,7 @@ local function EnsureControlsWindow()
 			function(btn)
 				if btn == 0 then
 					MessageBus:Send(Messages.Command.RESUME_RUN)
-					WGA.CloseWindow(WindowName.CONTROL)
+					SafeCloseWindow(WindowName.CONTROL)
 				end
 			end
 		)
@@ -947,7 +954,7 @@ local function EnsureControlsWindow()
 		function(b)
 			if b == 0 and Input.IsActionPressed(ButtonAction.ACTION_DROP, Data.Runtime.ControllerIndex) then
 				MessageBus:Send(Messages.Command.CREATE_RUN)
-				WGA.CloseWindow(WindowName.CONTROL)
+				SafeCloseWindow(WindowName.CONTROL)
 			end
 		end,
 		function(isHovered)
@@ -964,7 +971,7 @@ local function EnsureControlsWindow()
 			function(b)
 				if b == 0 then
 					Options.DebugConsoleEnabled = not Options.DebugConsoleEnabled
-					WGA.CloseWindow(WindowName.CONTROL)
+					SafeCloseWindow(WindowName.CONTROL)
 				end
 			end
 		)
@@ -1209,16 +1216,16 @@ end
 local function SetChangeGoalWindowExits(exits)
 	if exits then
 		EnsureChangeGoalWindow()
-	elseif WGA.Windows.menus[WindowName.CHANGE_GOAL] then
-		WGA.CloseWindow(WindowName.CHANGE_GOAL)
+	else
+		SafeCloseWindow(WindowName.CHANGE_GOAL)
 	end
 end
 
 local function SetMainWindowExits(exits)
 	if exits then
 		EnsureMainWindow()
-	elseif WGA.Windows.menus[WindowName.MAIN] then
-		WGA.CloseWindow(WindowName.MAIN)
+	else
+		SafeCloseWindow(WindowName.MAIN)
 	end
 end
 
@@ -1269,9 +1276,7 @@ local function HandleGlobalKeyInput()
 			)
 		)
 	then
-		if WGA.Windows.menus[WindowName.CONTROL] then
-			WGA.CloseWindow(WindowName.CONTROL)
-		else
+		if not SafeCloseWindow(WindowName.CONTROL) then
 			EnsureControlsWindow()
 		end
 	end
@@ -1284,14 +1289,10 @@ local function HandleControlsWindowKeyInput()
 
 	if IsConfirmTriggered() then
 		if Input.IsActionPressed(ButtonAction.ACTION_DROP, Data.Runtime.ControllerIndex) then
-			if WGA.Windows.menus[WindowName.CONTROL] then
-				WGA.CloseWindow(WindowName.CONTROL)
-			end
+			SafeCloseWindow(WindowName.CONTROL)
 			MessageBus:Send(Messages.Command.CREATE_RUN)
 		else
-			if WGA.Windows.menus[WindowName.CONTROL] then
-				WGA.CloseWindow(WindowName.CONTROL)
-			end
+			SafeCloseWindow(WindowName.CONTROL)
 			if Data.Runtime.State == Shared.State.PAUSED then
 				MessageBus:Send(Messages.Command.RESUME_RUN)
 			end
@@ -1730,9 +1731,7 @@ MessageBus:On(Messages.Event.RUN_PAUSED, function(payload)
 	SetMainWindowExits(payload.State == Shared.State.READY)
 
 	-- 有可能是退出游戏引发的事件，这种情况下不会自动关闭控制面板，需要手动关闭
-	if WGA.Windows.menus[WindowName.CONTROL] then
-		WGA.CloseWindow(WindowName.CONTROL)
-	end
+	SafeCloseWindow(WindowName.CONTROL)
 end)
 
 MessageBus:On(Messages.Event.RUN_RESUMED, function(payload)
