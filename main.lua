@@ -677,7 +677,7 @@ local function OnModload()
 	if not inGame then
 		return
 	end
-	OnGameStarted()
+	OnGameStarted(nil, true)
 end
 
 pcall(OnModload)
