@@ -260,6 +260,7 @@ function BISAI_PLUS.LoadPlugin(pluginName)
 end
 
 BISAI_PLUS.LoadPlugin("card_emperor") -- 修改皇帝卡效果，向着BOSS房方向前进4格，如果有塔罗牌桌布，改为6格
+BISAI_PLUS.LoadPlugin("fix_t_forgotten_control_sync") -- 修复里骨哥的灵魂无法控制状态没有同步到本体的问题
 BISAI_PLUS.LoadPlugin("fix_teleport_softlock") -- 修复进房间立刻使用传送主动会卡住的问题
 BISAI_PLUS.LoadPlugin("goal_ultra_greed") -- 大贪婪终点的BOSS实现
 BISAI_PLUS.LoadPlugin("item_d4") -- 修改D4效果，使用时，视为拥有混沌，持有编号丢失时不受影响
