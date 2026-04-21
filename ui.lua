@@ -1688,13 +1688,16 @@ local function RenderHud()
 		goalColor = KColor(0, 1, 0, 1)
 	end
 
-	DrawText(FontOutline, "目标：" .. goalNameStr, cursorX, cursorY, goalColor)
+	local goalLabelW = DrawText(FontOutline, "目标：", cursorX, cursorY, cWhite)
+	local goalNameW = DrawText(FontOutline, goalNameStr, cursorX + goalLabelW, cursorY, goalColor)
 
-	cursorY = cursorY + lineHeight
-
-	-- [第三行] 死亡次数 (原第四行)
-	local deathW = DrawText(FontOutline, "死亡：", cursorX, cursorY, cWhite)
-	DrawText(FontMono, tostring(Data.Runtime.DeathCount), cursorX + deathW, cursorY, cWhite)
+	-- 在目标右侧显示死亡数（准备状态下也显示），保持在同一行
+	local gap = 8
+	local deathX = cursorX + goalLabelW + goalNameW + gap
+	local deathLabelW = DrawText(FontOutline, "死亡：", deathX, cursorY, cWhite)
+	local deathCount = Data.Runtime.DeathCount or 0
+	local deathColor = (deathCount >= 3) and cRed or cWhite
+	DrawText(FontMono, tostring(deathCount), deathX + deathLabelW, cursorY, deathColor)
 
 	cursorY = cursorY + lineHeight
 
@@ -1740,15 +1743,18 @@ local function RenderHud()
 	local weight = Data.Runtime.Record.LevelWeight
 	local name = Data.Runtime.Record.LevelName
 
-	-- 5.3 画权重 (Mono字体)
-	local weightStr = string.format("[%s]", weight)
-	dynamicX = dynamicX + DrawText(FontMono, weightStr, dynamicX, cursorY, cWhite)
+	-- 如果权重为 0，则只显示一个“无”
+	if not weight or weight == 0 then
+		dynamicX = dynamicX + DrawText(FontOutline, "无", dynamicX, cursorY, cWhite)
+	else
+		-- 5.3 画权重 (Mono 字体)
+		local weightStr = string.format("[%s]", weight)
+		dynamicX = dynamicX + DrawText(FontMono, weightStr, dynamicX, cursorY, cWhite)
 
-	-- 5.4 画关卡名称 (Outline字体)
-	dynamicX = dynamicX + DrawText(FontOutline, " " .. name, dynamicX, cursorY, cWhite)
+		-- 5.4 画关卡名称 (Outline 字体)
+		dynamicX = dynamicX + DrawText(FontOutline, " " .. name, dynamicX, cursorY, cWhite)
 
-	-- 5.5 画时间 (Mono字体)
-	if Data.Runtime.State ~= Shared.State.READY then
+		-- 5.5 画时间 (Mono 字体)
 		dynamicX = dynamicX + DrawText(FontOutline, " - ", dynamicX, cursorY, cWhite)
 		local recordStr = "00:00"
 		if Data.Runtime.Record.Time > 0 then
@@ -1763,7 +1769,7 @@ local function RenderHud()
 	-- [第六行] 版本号 (非运行状态时显示)
 	if Data.Runtime.State ~= Shared.State.RUNNING then
 		local versionColor = KColor(1, 1, 0, 1) -- 黄色
-		local vLabelW = DrawText(FontOutline, "版本：", cursorX, cursorY, versionColor)
+		local vLabelW = DrawText(FontOutline, "版本：", cursorX, cursorY, cWhite)
 		DrawText(FontMono, "v" .. tostring(BISAI_PLUS.Version), cursorX + vLabelW, cursorY, versionColor)
 	end
 end
