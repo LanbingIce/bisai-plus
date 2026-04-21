@@ -1,6 +1,4 @@
-﻿-- TODO 超级种子功能
-
-BISAI_PLUS = RegisterMod("bisai+", 1)
+﻿BISAI_PLUS = RegisterMod("bisai+", 1)
 BISAI_PLUS.Version = "1.4.0"
 BISAI_PLUS.Description = [[
 【比赛+】
@@ -406,12 +404,18 @@ local function GetTimer()
 end
 
 local function GetPayload()
+	local runConfig = {
+		Goal = Data.Save.Goal,
+		PlayerType = Data.Save.PlayerType,
+		Seed = Data.Save.Seed,
+	}
 	return {
 		State = Data.Save.State,
 		Goal = Data.Save.Goal,
 		Timer = GetTimer(),
 		Seed = Data.Save.Seed,
 		SeedString = GameUtils.SeedToString(Data.Save.Seed),
+		SuperSeed = Utils.GenerateModSeed(runConfig),
 		PlayerType = Data.Save.PlayerType,
 		PlayerName = Shared.PlayerNameMap[Data.Save.PlayerType] or "未知角色",
 		DeathCount = Data.Save.DeathCount,

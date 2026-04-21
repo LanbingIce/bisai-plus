@@ -49,7 +49,8 @@ local Data = {
 		LastScreenWidth = Isaac.GetScreenWidth(),
 		LastScreenHeight = Isaac.GetScreenHeight(),
 		Seed = 0,
-		SeedString = "",
+		SeedString = "XXXX XXXX",
+		SuperSeed = "XXXXX-XXXXX",
 		PlayerType = PlayerType.PLAYER_POSSESSOR,
 		PlayerName = "未知角色",
 		DeathCount = 0,
@@ -1227,6 +1228,17 @@ function EnsureMainWindow()
 
 			Utils.DrawMultiLineText(FontPlain, item.Desc, pos.X, currentY, 0.5, color)
 		end)
+
+		-- 在主窗口底部显示超级种子使用说明
+		AddLabel(WindowName.MAIN, Vector(60, winSize.Y - 24), function(pos, visible)
+			if not visible then
+				return
+			end
+			local usageText =
+				"使用超级种子：\n在当前界面下，按~键打开控制台，输入或粘贴超级种子并回车"
+			local color = ThemeManager:GetLabelTextColor()
+			Utils.DrawMultiLineText(FontPlain, usageText, pos.X, pos.Y, 0.5, color)
+		end)
 	end
 end
 
@@ -1733,6 +1745,41 @@ local function RenderHud()
 
 	cursorY = cursorY + lineHeight
 
+	-- 超级种子显示（在 RUNNING 状态不显示）
+	if Data.Runtime.State ~= Shared.State.RUNNING then
+		local ssLabel = "超级种子："
+		local ssLabelColor = cWhite
+		local ssLabelW = DrawText(FontOutline, ssLabel, cursorX, cursorY, ssLabelColor)
+
+		local seedText = ""
+		if Data.Runtime.State == Shared.State.READY then
+			local runConfig = {
+				Goal = Data.Runtime.Goal,
+				PlayerType = Game():GetPlayer(0):GetPlayerType(),
+				Seed = Game():GetSeeds():GetStartSeed(),
+			}
+			seedText = Utils.GenerateModSeed(runConfig) or ""
+		else
+			-- 非 READY 状态直接采用 Runtime 内保存的 SuperSeed 字符串
+			seedText = Data.Runtime.SuperSeed or ""
+		end
+		local t = Isaac.GetTime() / 1000
+		local x = cursorX + ssLabelW
+		local speed = 2.0
+		for i = 1, #seedText do
+			local ch = string.sub(seedText, i, i)
+			local phase = (i - 1) * 0.45
+			local r = 0.5 + 0.5 * math.sin(t * speed + phase)
+			local g = 0.5 + 0.5 * math.sin(t * speed + phase + (2 * math.pi / 3))
+			local b = 0.5 + 0.5 * math.sin(t * speed + phase + (4 * math.pi / 3))
+			local color = KColor(r, g, b, 1)
+			FontMono:DrawStringScaledUTF8(ch, x, cursorY, scale, scale, color, 0, false)
+			x = x + FontMono:GetStringWidthUTF8(ch) * scale
+		end
+
+		cursorY = cursorY + lineHeight
+	end
+
 	-- [第五行] 最佳纪录 (原第三行，下移至此)
 	local dynamicX = cursorX
 
@@ -1907,9 +1954,41 @@ local function OnPlayerInit()
 	end
 end
 
+local function OnExecuteCmd(_, cmd, args)
+	-- 只在准备状态下处理超级种子
+	if Data.Runtime.State ~= Shared.State.READY then
+		return
+	end
+
+	-- 不处理带空格的命令
+	if #args ~= 0 then
+		return
+	end
+
+	-- 试图解码超级种子
+	local ok, runConfig = Utils.DecodeModSeed(cmd)
+
+	if not ok then
+		-- 如果种子长度正确，却解码失败，那可能是手误输错了，播放一下提示音效
+		if runConfig ~= "错误：种子长度不正确" then
+			SFXManager():Play(SoundEffect.SOUND_BOSS2INTRO_ERRORBUZZ)
+		end
+		-- 无论什么原因，解码失败都要返回
+		return
+	end
+	-- 设置一下角色和种子
+	MessageBus:Send(Messages.Command.SET_PLAYER_TYPE, { PlayerType = runConfig.PlayerType })
+	MessageBus:Send(Messages.Command.SET_SEED, { Seed = runConfig.Seed })
+	-- 下一帧发送开始比赛的命令（实际上会到下一局的第一帧）
+	Dispatcher:Dispatch(function()
+		StartRun(runConfig)
+	end)
+end
+
 do
 	EnsureMainWindow()
 end
 
 BISAI_PLUS:AddCallback(ModCallbacks.MC_GET_SHADER_PARAMS, OnGetShaderParams)
 BISAI_PLUS:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, OnPlayerInit)
+BISAI_PLUS:AddCallback(ModCallbacks.MC_EXECUTE_CMD, OnExecuteCmd)
