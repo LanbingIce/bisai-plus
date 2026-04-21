@@ -547,16 +547,12 @@ local function OnNewRoom()
 	FlipTransientState.RoomPedestalSeeds = {}
 end
 
-local function OnGameStarted(_, isContinued)
-	if not isContinued then
-		local data = API.GetSaveData() or {}
-		data.Pedestals = {}
-		API.SetSaveData(data)
-	end
+local function OnGameExit()
+	API.ClearSaveData()
 end
 
 BISAI_PLUS:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, OnNewRoom)
-BISAI_PLUS:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, OnGameStarted)
+BISAI_PLUS:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, OnGameExit)
 BISAI_PLUS:AddCallback(ModCallbacks.MC_POST_UPDATE, OnUpdate)
 BISAI_PLUS:AddCallback(ModCallbacks.MC_POST_GET_COLLECTIBLE, OnGetCollectible)
 BISAI_PLUS:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, OnPreUseFlip, CollectibleType.COLLECTIBLE_FLIP)
