@@ -48,6 +48,9 @@ local Data = {
 	Runtime = {
 		LastScreenWidth = Isaac.GetScreenWidth(),
 		LastScreenHeight = Isaac.GetScreenHeight(),
+		Seed = 0,
+		SeedString = "",
+		PlayerType = PlayerType.PLAYER_POSSESSOR,
 		PlayerName = "未知角色",
 		DeathCount = 0,
 		ControllerIndex = 0,
@@ -1104,7 +1107,11 @@ function EnsureMainWindow()
 				name,
 				function(button)
 					if button == 0 then
-						MessageBus:Send(Messages.Command.START_RUN, { Goal = i, PlayerName = GetCurrentPlayerName() })
+						MessageBus:Send(Messages.Command.START_RUN, {
+							Goal = i,
+							PlayerType = Game():GetPlayer(0):GetPlayerType(),
+							Seed = Game():GetSeeds():GetStartSeed(),
+						})
 						MessageBus:Send(Messages.Command.PAUSE_RUN) -- 开始游戏时先进入暂停状态，防止玩家不小心选错终点
 					end
 				end,
@@ -1344,7 +1351,11 @@ local function HandleMenuKeyInput()
 
 	-- 确认选择
 	if IsConfirmTriggered() then
-		MessageBus:Send(Messages.Command.START_RUN, { Goal = Data.Runtime.Goal, PlayerName = GetCurrentPlayerName() })
+		MessageBus:Send(Messages.Command.START_RUN, {
+			Goal = Data.Runtime.Goal,
+			PlayerType = Game():GetPlayer(0):GetPlayerType(),
+			Seed = Game():GetSeeds():GetStartSeed(),
+		})
 		MessageBus:Send(Messages.Command.PAUSE_RUN) -- 开始游戏时先进入暂停状态，防止玩家不小心选错终点
 		return
 	end
@@ -1667,7 +1678,7 @@ local function RenderHud()
 	-- [第二行] 目标名称
 	local currentGoal = Shared.GoalData[Data.Runtime.Goal]
 	local goalNameStr = currentGoal and currentGoal.Name or "-"
-	
+
 	local goalColor = cWhite
 	if Data.Runtime.State ~= Shared.State.RUNNING then
 		goalColor = KColor(0, 1, 0, 1)
@@ -1686,12 +1697,12 @@ local function RenderHud()
 	-- [第四行] 玩家与种子 (原第五行)
 
 	local pName = Data.Runtime.PlayerName
+	local seedStr = Data.Runtime.SeedString
 	if Data.Runtime.State == Shared.State.READY then
 		pName = GetCurrentPlayerName()
+		seedStr = Game():GetSeeds():GetStartSeedString()
 	end
 
-	local seedStr = Game():GetSeeds():GetStartSeedString()
-	
 	local playerSeedColor = cWhite
 	if Data.Runtime.State ~= Shared.State.RUNNING then
 		playerSeedColor = KColor(0, 1, 0, 1)
