@@ -215,11 +215,21 @@ local function RollPlayerType()
 	MessageBus:Send(Messages.Command.SET_SEED, { Seed = seed })
 end
 
----@return string
-local function GetCurrentPlayerName()
-	local player = Game():GetPlayer(0)
-	local name = Shared.PlayerNameMap[player:GetPlayerType()] or player:GetName() or "未知角色"
-	return name
+local function StartRun(runConfig)
+	if not runConfig then
+		runConfig = {}
+	end
+
+	local seed = runConfig.Seed or Game():GetSeeds():GetStartSeed()
+	local goal = runConfig.Goal or Data.Runtime.Goal
+	local playerType = runConfig.PlayerType or Game():GetPlayer(0):GetPlayerType()
+
+	MessageBus:Send(Messages.Command.START_RUN, {
+		Goal = goal,
+		PlayerType = playerType,
+		Seed = seed,
+	})
+	MessageBus:Send(Messages.Command.PAUSE_RUN) -- 开始游戏时先进入暂停状态，防止玩家不小心选错终点
 end
 
 local function SafeCloseWindow(windowName)
@@ -1107,12 +1117,11 @@ function EnsureMainWindow()
 				name,
 				function(button)
 					if button == 0 then
-						MessageBus:Send(Messages.Command.START_RUN, {
-							Goal = i,
-							PlayerType = Game():GetPlayer(0):GetPlayerType(),
-							Seed = Game():GetSeeds():GetStartSeed(),
+						StartRun({
+							{
+								Goal = i,
+							},
 						})
-						MessageBus:Send(Messages.Command.PAUSE_RUN) -- 开始游戏时先进入暂停状态，防止玩家不小心选错终点
 					end
 				end,
 				function()
@@ -1351,12 +1360,7 @@ local function HandleMenuKeyInput()
 
 	-- 确认选择
 	if IsConfirmTriggered() then
-		MessageBus:Send(Messages.Command.START_RUN, {
-			Goal = Data.Runtime.Goal,
-			PlayerType = Game():GetPlayer(0):GetPlayerType(),
-			Seed = Game():GetSeeds():GetStartSeed(),
-		})
-		MessageBus:Send(Messages.Command.PAUSE_RUN) -- 开始游戏时先进入暂停状态，防止玩家不小心选错终点
+		StartRun()
 		return
 	end
 
@@ -1699,7 +1703,8 @@ local function RenderHud()
 	local pName = Data.Runtime.PlayerName
 	local seedStr = Data.Runtime.SeedString
 	if Data.Runtime.State == Shared.State.READY then
-		pName = GetCurrentPlayerName()
+		local player = Game():GetPlayer(0)
+		pName = Shared.PlayerNameMap[player:GetPlayerType()] or player:GetName() or "未知角色"
 		seedStr = Game():GetSeeds():GetStartSeedString()
 	end
 
