@@ -1703,13 +1703,25 @@ local function RenderHud()
 		seedStr = Game():GetSeeds():GetStartSeedString()
 	end
 
-	local playerSeedColor = cWhite
+	-- 默认颜色：运行中白色，非运行时绿色
+	local nameColor = cWhite
+	local seedColor = cWhite
 	if Data.Runtime.State ~= Shared.State.RUNNING then
-		playerSeedColor = KColor(0, 1, 0, 1)
+		nameColor = KColor(0, 1, 0, 1)
+		seedColor = KColor(0, 1, 0, 1)
 	end
 
-	local seedLabelW = DrawText(FontOutline, pName .. " - ", cursorX, cursorY, playerSeedColor)
-	DrawText(FontMono, seedStr, cursorX + seedLabelW, cursorY, playerSeedColor)
+	if Data.Runtime.State ~= Shared.State.READY then
+		local currentSeedStr = Game():GetSeeds():GetStartSeedString()
+		local dataSeedStr = Data.Runtime.SeedString or ""
+		if dataSeedStr ~= currentSeedStr then
+			seedColor = cRed
+		end
+	end
+
+	local nameW = DrawText(FontOutline, pName, cursorX, cursorY, nameColor)
+	local sepW = DrawText(FontMono, " - ", cursorX + nameW, cursorY, cWhite)
+	DrawText(FontMono, seedStr, cursorX + nameW + sepW, cursorY, seedColor)
 
 	cursorY = cursorY + lineHeight
 
