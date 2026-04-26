@@ -115,6 +115,39 @@ local function IsInMomRoomAfterRottenHeart(level, room)
 	return true
 end
 
+---@param level Level
+---@param room Room
+---@return boolean
+local function IsTrappedInMausoleumMomRoom(level, room)
+	-- 检查：玩家在腐化妈腿房间，并且没有正确的剧情刀碎片，并且腐化妈心的门也是关闭状态
+	local roomName = level:GetCurrentRoomDesc().Data.Name
+	if roomName ~= "Mom (mausoleum)" then
+		return false
+	end
+
+	local hasKnife = BISAI_PLUS.GameUtils.HasCollectible(CollectibleType.COLLECTIBLE_KNIFE_PIECE_1)
+		and BISAI_PLUS.GameUtils.HasCollectible(CollectibleType.COLLECTIBLE_KNIFE_PIECE_2)
+
+	if hasKnife then
+		return false
+	end
+
+	-- 检查肉门（通往尸骸的boss门）是否是关闭状态
+	-- 如果肉门被某种手段开启了，门的状态就不是被锁上的了
+	for i = 0, DoorSlot.NUM_DOOR_SLOTS - 1 do
+		local door = room:GetDoor(i)
+		if door and door:IsRoomType(RoomType.ROOM_BOSS) then
+			-- 只要肉门还没被打开（即处于锁上或者正在锁的状态），就不封死活板门
+			-- isOpen 返回 false 就意味着它没有开启，在以撒的 API 中这涵盖了关闭和锁定状态
+			if not door:IsOpen() then
+				return true
+			end
+		end
+	end
+
+	return false
+end
+
 local function OnUpdate()
 	local room = Game():GetRoom()
 	local level = Game():GetLevel()
@@ -135,6 +168,11 @@ local function OnUpdate()
 
 	-- 如果击杀了腐化妈心，并且在腐化妈腿房间，不关闭活板门
 	if IsInMomRoomAfterRottenHeart(level, room) then
+		return
+	end
+
+	-- 如果在陵墓妈腿房因为少刀且没开肉门导致卡关，也放行普通活板门
+	if IsTrappedInMausoleumMomRoom(level, room) then
 		return
 	end
 

@@ -9,6 +9,7 @@ local function OnPickupInit(_, pickup)
 	local isTargetGoal = goal == BISAI_PLUS.Shared.Goal.BLUE_BABY
 		or goal == BISAI_PLUS.Shared.Goal.LAMB
 		or goal == BISAI_PLUS.Shared.Goal.MEGA_SATAN
+		or goal == BISAI_PLUS.Shared.Goal.MOTHER
 
 	-- 确保是小蓝人、羔羊、超级撒旦终点之一
 	if not isTargetGoal then
