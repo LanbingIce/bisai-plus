@@ -325,6 +325,10 @@ BISAI_PLUS.LoadPlugin(
 	"修改皇帝卡：从当前房间按最短路径向BOSS房前进4格，持有[塔罗牌桌布]时改为6格"
 )
 BISAI_PLUS.LoadPlugin(
+	"fix_t_forgotten_body_stuck",
+	"修复：当堕化遗骸的本体被抛到高柱子里面时，召回本体"
+)
+BISAI_PLUS.LoadPlugin(
 	"fix_t_forgotten_control_sync",
 	"修复：堕化遗骸的灵魂的无法控制状态有时没有正确同步到本体的问题"
 )
