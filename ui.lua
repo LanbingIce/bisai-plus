@@ -41,6 +41,7 @@ local WindowName = {
 	CUSTOM_THEME = "bisai+_custom_theme_win",
 	CONTROL = "bisai+_controls_win",
 	HELP = "bisai+_help_win",
+	PLUGINS = "bisai+_plugins_win",
 	CHANGE_GOAL = "bisai+_change_goal_win",
 }
 
@@ -872,6 +873,196 @@ local function EnsureChangeGoalWindow()
 	end
 end
 
+local function EnsurePluginsWindow()
+	local winName = WindowName.PLUGINS
+	if WGA.Windows.menus[winName] then
+		return
+	end
+
+	if WGA.MenuData[winName] then
+		WGA.MenuData[winName].sortList = {}
+		WGA.MenuData[winName].Buttons = {}
+	end
+
+	local winW, winH = 360, 240
+	local paddingX, paddingY = 8, 8
+	local scale = 0.5 -- 使用与说明窗口相同的缩放，保证清晰度
+	local baseHeight = FontPlain:GetLineHeight()
+	local lineHeight = baseHeight * scale + 2
+	local summaryLines = 2 -- 顶部汇总占两行
+	local summaryH = lineHeight * summaryLines
+	local blockH = lineHeight * 3 -- 每个插件块：名称 + 最多两行简介
+	local plugins = BISAI_PLUS.Plugins or {}
+	local totalPlugins = #plugins
+	local visibleHeight = winH - paddingY * 2 - summaryH
+	local visiblePlugins = math.max(1, math.floor(visibleHeight / blockH))
+	local currentScrollIndex = 1
+
+	local sWidth = Isaac.GetScreenWidth()
+	local sHeight = Isaac.GetScreenHeight()
+	local winPos = Vector((sWidth - winW) / 2, (sHeight - winH) / 2)
+
+	local window = WGA.ShowWindow(winName, winPos, Vector(winW, winH))
+	window.backcolor = ThemeManager:GetWindowColor()
+	window.backcolornfocus = ThemeManager:GetWindowUnfocusedColor()
+
+	if totalPlugins > visiblePlugins then
+		local barSize = Vector(8, visibleHeight)
+		local scrollBar = WGA.AddScrollBar(
+			winName,
+			"PluginsScroll",
+			Vector(winW - 14, paddingY),
+			barSize,
+			nil,
+			nil,
+			function(btn, val)
+				currentScrollIndex = 1 + math.floor(val / blockH)
+			end,
+			function(pos, visible)
+				if not visible then
+					return
+				end
+				TextBoxSprite.Color = ThemeManager:GetWindowUnfocusedColor()
+				TextBoxSprite.Color = Color.Lerp(TextBoxSprite.Color, Color(0, 0, 0, 1), 0.3)
+				TextBoxSprite.Scale = Vector(barSize.X / 2, barSize.Y / 2)
+				TextBoxSprite:SetFrame(0)
+				TextBoxSprite:RenderLayer(0, pos)
+			end,
+			0,
+			0,
+			(totalPlugins - visiblePlugins) * blockH + visibleHeight,
+			0
+		)
+		if scrollBar then
+			scrollBar.dragsprRenderFunc = function(self, pos, dragVal, barHalfSize)
+				local drawSize = Vector(self.x, barHalfSize * 2)
+				local isDragging = (
+					self.isDrager
+					and self.IsSelected
+					and self.IsSelected > 0
+					and Input.IsMouseBtnPressed(0)
+				)
+				local isHovered = (self.IsSelected and self.IsSelected > 0)
+
+				if isDragging or isHovered then
+					TextBoxSprite:SetFrame(1)
+					TextBoxSprite.Color = ThemeManager:GetButtonHighlightColor()
+				else
+					TextBoxSprite:SetFrame(0)
+					TextBoxSprite.Color = ThemeManager:GetButtonColor()
+				end
+
+				TextBoxSprite.Scale = Vector(drawSize.X / 2, drawSize.Y / 2)
+				TextBoxSprite:RenderLayer(0, pos)
+				TextBoxSprite.Scale = Vector(drawSize.X / 2 - 1, drawSize.Y / 2 - 1)
+				TextBoxSprite:RenderLayer(1, pos + Vector(1, 1))
+			end
+		end
+	end
+
+	AddLabel(winName, Vector(paddingX, paddingY), function(pos)
+		local color = ThemeManager:GetLabelTextColor()
+
+		-- 顶部汇总文本，显示已启用数量
+		local enabledCount = 0
+		for i = 1, #plugins do
+			local e = plugins[i]
+			local en = true
+			if type(e) == "table" then
+				if e.Enabled ~= nil then
+					en = e.Enabled
+				elseif
+					BISAI_PLUS
+					and BISAI_PLUS.Data
+					and BISAI_PLUS.Data.PluginEnabled
+					and BISAI_PLUS.Data.PluginEnabled[e.Name] ~= nil
+				then
+					en = BISAI_PLUS.Data.PluginEnabled[e.Name]
+				end
+			else
+				if
+					BISAI_PLUS
+					and BISAI_PLUS.Data
+					and BISAI_PLUS.Data.PluginEnabled
+					and BISAI_PLUS.Data.PluginEnabled[e] ~= nil
+				then
+					en = BISAI_PLUS.Data.PluginEnabled[e]
+				end
+			end
+			if en then
+				enabledCount = enabledCount + 1
+			end
+		end
+		local summary = string.format("已加载插件：%d个（%d 个已启用）。", totalPlugins, enabledCount)
+		Utils.DrawMultiLineText(FontPlain, summary, pos.X, pos.Y, scale, color)
+
+		local startIdx = Utils.Clamp(currentScrollIndex, 1, math.max(1, totalPlugins - visiblePlugins + 1))
+		local endIdx = math.min(totalPlugins, startIdx + visiblePlugins - 1)
+
+		for idx = startIdx, endIdx do
+			local entry = plugins[idx]
+			local name = "(unknown)"
+			local desc = ""
+			local enabled = true
+
+			if type(entry) == "table" then
+				name = entry.Name or name
+				desc = entry.Desc or ""
+				if entry.Enabled ~= nil then
+					enabled = entry.Enabled
+				elseif
+					BISAI_PLUS
+					and BISAI_PLUS.Data
+					and BISAI_PLUS.Data.PluginEnabled
+					and BISAI_PLUS.Data.PluginEnabled[name] ~= nil
+				then
+					enabled = BISAI_PLUS.Data.PluginEnabled[name]
+				end
+			else
+				name = entry or name
+				if
+					BISAI_PLUS
+					and BISAI_PLUS.Data
+					and BISAI_PLUS.Data.PluginEnabled
+					and BISAI_PLUS.Data.PluginEnabled[name] ~= nil
+				then
+					enabled = BISAI_PLUS.Data.PluginEnabled[name]
+				end
+			end
+
+			local y0 = math.floor(pos.Y + summaryH + (idx - startIdx) * blockH)
+
+			-- 名称
+			FontPlain:DrawStringScaledUTF8(name, pos.X, y0, scale, scale, color, 0, false)
+
+			-- 状态文本和颜色
+			local statusText = enabled and "已启用" or "已禁用"
+			local statusColor
+			if enabled then
+				local bh = ThemeManager:GetButtonHighlightColor()
+				statusColor = KColor(bh.R, bh.G, bh.B, bh.A)
+			else
+				statusColor = KColor(1, 0.2, 0.2, 1)
+			end
+			FontPlain:DrawStringScaledUTF8(
+				statusText,
+				pos.X + winW - paddingX - 60,
+				y0,
+				scale,
+				scale,
+				statusColor,
+				0,
+				false
+			)
+
+			-- 简介
+			if desc and desc ~= "" then
+				Utils.DrawMultiLineText(FontPlain, desc, pos.X + 6, y0 + lineHeight, scale, color)
+			end
+		end
+	end)
+end
+
 local function EnsureControlsWindow()
 	if WGA.Windows.menus[WindowName.CONTROL] then
 		return
@@ -1056,8 +1247,12 @@ function EnsureMainWindow()
 		WGA.MenuData[winName].Buttons = {}
 	end
 
-	-- 1. 定义窗口尺寸
-	local winSize = Vector(240, 160)
+	-- 1. 定义窗口尺寸：先定义按钮尺寸，以便按需增加窗口高度
+	local itemSize = Vector(40, 12)
+	local gapY = 1
+	local step = itemSize.Y + gapY
+	-- 默认高度基础上增加一个按钮高度，避免因新增按钮被裁剪
+	local winSize = Vector(240, 160 + step)
 
 	-------------------------------------------------------
 	-- 2. 使用正确的 API 获取宽度和高度
@@ -1105,8 +1300,7 @@ function EnsureMainWindow()
 			bgSprite:Render(pos, Vector.Zero, Vector.Zero)
 		end, 100) -- 使用正数高优先级，确保它在最底层渲染
 
-		local itemSize = Vector(40, 12)
-		local gapY = 1
+		-- itemSize 和 gapY 已在上方作为窗口高度计算的一部分定义
 
 		for i, item in ipairs(Shared.GoalData) do
 			local name = item.Name
@@ -1136,9 +1330,13 @@ function EnsureMainWindow()
 			)
 		end
 
+		-- 在最后一个目标按钮下预留一行空白，再放主题/说明/插件按钮
+		local numGoals = #Shared.GoalData
+		local themeRow = numGoals + 1
+
 		AddStyledButton(
 			WindowName.MAIN,
-			Vector(8, 12) + Vector(0, 9 * (itemSize.Y + gapY)),
+			Vector(8, 12) + Vector(0, themeRow * step),
 			Vector(40, 12),
 			"主题",
 			function(button)
@@ -1161,7 +1359,7 @@ function EnsureMainWindow()
 
 		AddStyledButton(
 			WindowName.MAIN,
-			Vector(8, 12) + Vector(0, 10 * (itemSize.Y + gapY)),
+			Vector(8, 12) + Vector(0, (themeRow + 1) * step),
 			Vector(40, 12),
 			"说明",
 			function(button)
@@ -1181,6 +1379,35 @@ function EnsureMainWindow()
 				end
 			end
 		)
+
+		-- 插件按钮直接显示简洁的汇总（例如：插件(3/3)）
+		do
+			local plugins = BISAI_PLUS.Plugins or {}
+			local total = #plugins
+			local label = "插件(" .. tostring(total) .. "/" .. tostring(total) .. ")"
+			AddStyledButton(
+				WindowName.MAIN,
+				Vector(8, 12) + Vector(0, (themeRow + 2) * step),
+				Vector(40, 12),
+				label,
+				function(button)
+					if button == 0 then
+						EnsurePluginsWindow()
+						WGA.SelectedMenu = WindowName.PLUGINS
+						local wind = WGA.Windows
+						if wind and wind.order then
+							for i, name in ipairs(wind.order) do
+								if name == WindowName.PLUGINS then
+									table.remove(wind.order, i)
+									table.insert(wind.order, 1, WindowName.PLUGINS)
+									break
+								end
+							end
+						end
+					end
+				end
+			)
+		end
 
 		AddLabel(WindowName.MAIN, Vector(180, 4), function(pos)
 			local color = ThemeManager:GetLabelTextColor()
