@@ -47,6 +47,7 @@ local WindowName = {
 
 local Data = {
 	Runtime = {
+		PracticeMode = false,
 		LastScreenWidth = Isaac.GetScreenWidth(),
 		LastScreenHeight = Isaac.GetScreenHeight(),
 		Seed = 0,
@@ -1423,13 +1424,28 @@ function EnsureMainWindow()
 			)
 		end)
 
-		AddStyledButton(WindowName.MAIN, Vector(104, 12), Vector(60, 12), "随机角色种子(Q)", function(button)
+		AddStyledButton(
+			WindowName.MAIN,
+			Vector(60, 12),
+			Vector(56, 12),
+			Data.Runtime.PracticeMode and "禁用练习模式" or "启用练习模式",
+			function(button)
+				if button == 0 then
+					Data.Runtime.PracticeMode = not Data.Runtime.PracticeMode
+				end
+				if SafeCloseWindow(WindowName.MAIN) then
+					EnsureMainWindow()
+				end
+			end
+		)
+
+		AddStyledButton(WindowName.MAIN, Vector(118, 12), Vector(56, 12), "随机角色种子(Q)", function(button)
 			if button == 0 then
 				RollPlayerType()
 			end
 		end)
 
-		AddStyledButton(WindowName.MAIN, Vector(172, 12), Vector(60, 12), "随机终点(E)", function(button)
+		AddStyledButton(WindowName.MAIN, Vector(176, 12), Vector(56, 12), "随机终点(E)", function(button)
 			if button == 0 then
 				RollGoal()
 			end
@@ -1457,12 +1473,23 @@ function EnsureMainWindow()
 		end)
 
 		-- 在主窗口底部显示超级种子使用说明
-		AddLabel(WindowName.MAIN, Vector(60, winSize.Y - 24), function(pos, visible)
+		AddLabel(WindowName.MAIN, Vector(60, winSize.Y - 48), function(pos, visible)
 			if not visible then
 				return
 			end
 			local usageText =
 				"使用超级种子：\n在当前界面下，按~键打开控制台，输入或粘贴超级种子并回车"
+			local color = ThemeManager:GetLabelTextColor()
+			Utils.DrawMultiLineText(FontPlain, usageText, pos.X, pos.Y, 0.5, color)
+		end)
+
+		-- 在主窗口底部显示练习模式使用说明
+		AddLabel(WindowName.MAIN, Vector(60, winSize.Y - 24), function(pos, visible)
+			if not visible then
+				return
+			end
+			local usageText =
+				"练习模式：\n开启后不需要鼠标就能暂停计时器，在正赛中使用会判定为犯规"
 			local color = ThemeManager:GetLabelTextColor()
 			Utils.DrawMultiLineText(FontPlain, usageText, pos.X, pos.Y, 0.5, color)
 		end)
@@ -1534,6 +1561,10 @@ local function HandleGlobalKeyInput()
 	then
 		if not SafeCloseWindow(WindowName.CONTROL) then
 			EnsureControlsWindow()
+			-- 如果启用了练习模式且当前在运行中，就暂停
+			if Data.Runtime.PracticeMode and Data.Runtime.State == Shared.State.RUNNING then
+				MessageBus:Send(Messages.Command.PAUSE_RUN)
+			end
 		end
 	end
 
@@ -1911,9 +1942,18 @@ local function RenderHud()
 	local labelW = DrawText(FontOutline, "用时：", cursorX, cursorY, cWhite)
 	local timeW = DrawText(FontMono, timeStr, cursorX + labelW, cursorY, timeColor)
 
+	-- 先绘制（已暂停）提示（如有），并计算后续绘制基准 X
+	local baseX = cursorX + labelW + timeW
+	local extraX = baseX
 	if Data.Runtime.State == Shared.State.PAUSED then
-		local gap = 6
-		DrawText(FontOutline, "（已暂停）", cursorX + labelW + timeW + gap, cursorY, cRed)
+		local gap = 4
+		local pausedW = DrawText(FontOutline, "（已暂停）", extraX + gap, cursorY, cRed)
+		extraX = extraX + gap + pausedW
+	end
+
+	if Data.Runtime.PracticeMode then
+		local pmGap = 4
+		DrawText(FontOutline, "[练]", extraX + pmGap, cursorY, KColor(1, 0.25, 0.25, 1))
 	end
 
 	cursorY = cursorY + lineHeight
