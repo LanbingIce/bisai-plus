@@ -17,15 +17,22 @@ local function OnPlayerUpdate(_, player)
 
 	local room = Game():GetRoom()
 	local gridIndex = room:GetGridIndex(player.Position)
-	local currentGrid = room:GetGridEntity(gridIndex)
+	local w = room:GetGridWidth()
 
+	-- 包含自身(0)在内的九宫格偏移量
+	local offsets = { 0, -w - 1, -w, -w + 1, -1, 1, w - 1, w, w + 1 }
 	local isStuck = false
 
-	-- 碰撞检测：是否在柱子里，或者被挤出房间外
-	if currentGrid and currentGrid:GetType() == GridEntityType.GRID_PILLAR then
-		isStuck = true
-	elseif not room:IsPositionInRoom(player.Position, 0) then
-		isStuck = true
+	-- 扫描九宫格
+	for _, offset in ipairs(offsets) do
+		local checkEnt = room:GetGridEntity(gridIndex + offset)
+		if checkEnt and checkEnt:GetType() == GridEntityType.GRID_PILLAR then
+			-- 核心：不管你在哪个格子上，只要你离这个柱子的中心距离 <= 25，说明你物理上卡进去了
+			if player.Position:Distance(checkEnt.Position) <= 25 then
+				isStuck = true
+				break
+			end
+		end
 	end
 
 	if isStuck then
