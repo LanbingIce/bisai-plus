@@ -36,9 +36,7 @@ Shared.GoalData = {
 		Nickname = "大撒旦",
 		Desc = [[- 永久获得[钥匙碎片1]和[钥匙碎片2]
 		- 有[全家福]且没有[底片]时，封闭阴间入口
-		- 有[底片]且没有[全家福]时，封闭教堂入口
-		- 击败以撒后，若没有[全家福]，则将宝箱替换为虚空传送门
-		- 击败撒但后，若没有[底片]，则将宝箱替换为虚空传送门]],
+		- 有[底片]且没有[全家福]时，封闭教堂入口]],
 		IsStage = function()
 			return Game():GetLevel():GetStage() == LevelStage.STAGE6
 		end,
@@ -126,8 +124,7 @@ Shared.GoalData = {
 		Name = "羔羊",
 		Nickname = "羊总",
 		Desc = [[- [全家福]替换为[底片]
-		- 封闭教堂入口
-		- 击败撒但后，若没有[底片]，则将宝箱替换为虚空传送门]],
+		- 封闭教堂入口]],
 		IsRoom = function()
 			return Game():GetLevel():GetCurrentRoomDesc().Data.Name == "The Lamb"
 		end,
@@ -146,8 +143,7 @@ Shared.GoalData = {
 		Name = "？？？",
 		Nickname = "小蓝人",
 		Desc = [[- [底片]替换为[全家福]
-		- 封闭阴间入口
-		- 击败以撒后，若没有[全家福]，则将宝箱替换为虚空传送门]],
+		- 封闭阴间入口]],
 		IsRoom = function()
 			return Game():GetLevel():GetCurrentRoomDesc().Data.Name == "???"
 		end,
