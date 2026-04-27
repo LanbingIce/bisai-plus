@@ -1472,13 +1472,24 @@ function EnsureMainWindow()
 			Utils.DrawMultiLineText(FontPlain, item.Desc, pos.X, currentY, 0.5, color)
 		end)
 
+		-- 在主窗口底部显示通用说明：
+		AddLabel(WindowName.MAIN, Vector(60, winSize.Y - 80), function(pos, visible)
+			if not visible then
+				return
+			end
+			local usageText =
+				"通用\n- 击败以撒后，若没有[全家福]，则将宝箱替换为虚空传送门\n- 击败撒但后，若没有[底片]，则将宝箱替换为虚空传送门"
+			local color = ThemeManager:GetLabelTextColor()
+			Utils.DrawMultiLineText(FontPlain, usageText, pos.X, pos.Y, 0.5, color)
+		end)
+
 		-- 在主窗口底部显示超级种子使用说明
 		AddLabel(WindowName.MAIN, Vector(60, winSize.Y - 48), function(pos, visible)
 			if not visible then
 				return
 			end
 			local usageText =
-				"使用超级种子：\n在当前界面下，按~键打开控制台，输入或粘贴超级种子并回车"
+				"使用超级种子\n在当前界面下，按~键打开控制台，输入或粘贴超级种子并回车"
 			local color = ThemeManager:GetLabelTextColor()
 			Utils.DrawMultiLineText(FontPlain, usageText, pos.X, pos.Y, 0.5, color)
 		end)
@@ -1489,7 +1500,7 @@ function EnsureMainWindow()
 				return
 			end
 			local usageText =
-				"练习模式：\n开启后不需要鼠标就能暂停计时器，在正赛中使用会判定为犯规"
+				"练习模式\n开启后不需要鼠标就能暂停计时器，在正赛中使用会判定为犯规"
 			local color = ThemeManager:GetLabelTextColor()
 			Utils.DrawMultiLineText(FontPlain, usageText, pos.X, pos.Y, 0.5, color)
 		end)
