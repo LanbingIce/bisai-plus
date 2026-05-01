@@ -397,6 +397,7 @@ BISAI_PLUS.LoadPlugin(
 	"mechanic_wrong_goal_void_portal",
 	"误入其他终点的最终房间之后，击杀最终BOSS生成虚空门"
 )
+BISAI_PLUS.LoadPlugin("qol_right_click_drop", "鼠标右键映射为丢弃键")
 BISAI_PLUS.LoadPlugin("route_beast_close_door", "祸兽路线，关闭错误的活板门，防止选手走错")
 BISAI_PLUS.LoadPlugin("route_beast_mom_exit", "祸兽路线击杀妈腿之后，允许离开BOSS房")
 BISAI_PLUS.LoadPlugin("route_delirium_trophy", "精神错乱房间始终生成奖杯")
