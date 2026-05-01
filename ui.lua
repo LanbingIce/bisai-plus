@@ -1251,11 +1251,11 @@ function EnsureMainWindow()
 	end
 
 	-- 1. 定义窗口尺寸：先定义按钮尺寸，以便按需增加窗口高度
-	local itemSize = Vector(40, 12)
+	local itemSize = Vector(39, 12)
 	local gapY = 1
 	local step = itemSize.Y + gapY
-	-- 默认高度基础上增加一个按钮高度，避免因新增按钮被裁剪
-	local winSize = Vector(240, 160 + step)
+
+	local winSize = Vector(240, 160)
 
 	-------------------------------------------------------
 	-- 2. 使用正确的 API 获取宽度和高度
@@ -1340,7 +1340,7 @@ function EnsureMainWindow()
 		AddStyledButton(
 			WindowName.MAIN,
 			Vector(8, 12) + Vector(0, themeRow * step),
-			Vector(40, 12),
+			Vector(19, 12),
 			"主题",
 			function(button)
 				if button == 0 then
@@ -1362,8 +1362,8 @@ function EnsureMainWindow()
 
 		AddStyledButton(
 			WindowName.MAIN,
-			Vector(8, 12) + Vector(0, (themeRow + 1) * step),
-			Vector(40, 12),
+			Vector(28, 12) + Vector(0, themeRow * step),
+			Vector(19, 12),
 			"说明",
 			function(button)
 				if button == 0 then
@@ -1390,8 +1390,8 @@ function EnsureMainWindow()
 			local label = "插件(" .. tostring(total) .. "/" .. tostring(total) .. ")"
 			AddStyledButton(
 				WindowName.MAIN,
-				Vector(8, 12) + Vector(0, (themeRow + 2) * step),
-				Vector(40, 12),
+				Vector(8, 12) + Vector(0, (themeRow + 1) * step),
+				Vector(39, 12),
 				label,
 				function(button)
 					if button == 0 then
@@ -1453,7 +1453,7 @@ function EnsureMainWindow()
 			end
 		end)
 
-		AddLabel(WindowName.MAIN, Vector(60, 32), function(pos, visible)
+		AddLabel(WindowName.MAIN, Vector(60, 26), function(pos, visible)
 			if not visible then
 				return
 			end
@@ -1469,7 +1469,7 @@ function EnsureMainWindow()
 				FontPlain:DrawStringScaledUTF8(item.Name, pos.X, currentY, 0.5, 0.5, color, 0, false)
 			end
 
-			currentY = currentY + 16
+			currentY = currentY + 10
 
 			Utils.DrawMultiLineText(FontPlain, item.Desc, pos.X, currentY, 0.5, color)
 		end)
