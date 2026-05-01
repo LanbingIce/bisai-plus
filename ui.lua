@@ -15,6 +15,7 @@ local NIL_FUNCTION = function() end
 local FontPlain = Font()
 local FontOutline = Font()
 local FontMono = Font()
+local FontEID9 = Font()
 
 do
 	local modPath
@@ -24,6 +25,7 @@ do
 	FontPlain:Load(modPath .. "resources/font/fusion_pixel_font_12px_plain/fusion_pixel_font_12px_plain.fnt")
 	FontOutline:Load(modPath .. "resources/font/fusion_pixel_font_12px_outline/fusion_pixel_font_12px_outline.fnt")
 	FontMono:Load("font/terminus.fnt")
+	FontEID9:Load(modPath .. "resources/font/eid9/eid9_9px.fnt")
 end
 
 local TextBoxSprite = Sprite()
@@ -1710,6 +1712,10 @@ local function RenderTimeStatistics()
 	local offsetX = 80
 	local offsetY = 40 -- 稍微往上移一点，避免底部文字被遮挡
 
+	local isFilterParams = Options.Filter
+	local fChart = isFilterParams and FontEID9 or FontOutline
+	local curScale = isFilterParams and 1.0 or 0.5
+
 	-- 绘制统计图表
 	local records = BISAI_PLUS.Data.Save.Records
 
@@ -1847,16 +1853,16 @@ local function RenderTimeStatistics()
 			-- 处理部分包含罗马数字后缀产生的多余空格前缀
 			line2 = string.gsub(line2, "^%s+", "")
 
-			-- 统一第一行的高度为 py + 18
-			local yOffset = py + 18
+			-- 调整层名称距X轴第一行的高度
+			local yOffset = isFilterParams and (py + 12) or (py + 18)
 
-			local line1W = FontOutline:GetStringWidthUTF8(line1) * 0.5
-			FontOutline:DrawStringScaledUTF8(
+			local line1W = fChart:GetStringWidthUTF8(line1) * curScale
+			fChart:DrawStringScaledUTF8(
 				line1,
 				px - i * dx - line1W / 2,
 				yOffset,
-				0.5,
-				0.5,
+				curScale,
+				curScale,
 				KColor(textColor.Red, textColor.Green, textColor.Blue, 1),
 				0,
 				false
@@ -1864,13 +1870,14 @@ local function RenderTimeStatistics()
 
 			-- 如果有第二行，画在下面
 			if line2 ~= "" then
-				local line2W = FontOutline:GetStringWidthUTF8(line2) * 0.5
-				FontOutline:DrawStringScaledUTF8(
+				local line2W = fChart:GetStringWidthUTF8(line2) * curScale
+				local yOffset2 = isFilterParams and (yOffset + 10) or (yOffset + 9)
+				fChart:DrawStringScaledUTF8(
 					line2,
 					px - i * dx - line2W / 2,
-					yOffset + 9, -- 下移 9 像素
-					0.5,
-					0.5,
+					yOffset2,
+					curScale,
+					curScale,
 					KColor(textColor.Red, textColor.Green, textColor.Blue, 1),
 					0,
 					false
@@ -1878,13 +1885,14 @@ local function RenderTimeStatistics()
 			end
 
 			-- 绘制时间文本 (缩小字体并手动居中，贴近柱状图顶部)
-			local txtW = FontOutline:GetStringWidthUTF8(txt) * 0.5
-			FontOutline:DrawStringScaledUTF8(
+			local txtW = fChart:GetStringWidthUTF8(txt) * curScale
+			local txtY = isFilterParams and (py - 15 - barHeight) or (py - 8 - barHeight)
+			fChart:DrawStringScaledUTF8(
 				txt,
 				px - i * dx - txtW / 2,
-				py - 8 - barHeight,
-				0.5,
-				0.5,
+				txtY,
+				curScale,
+				curScale,
 				KColor(textColor.Red, textColor.Green, textColor.Blue, 1),
 				0,
 				false
@@ -1898,8 +1906,18 @@ local function RenderHud()
 	-- 配置与状态获取
 	-- ===========================
 	local hudOffset = Options.HUDOffset
-	local scale = 0.5
+	local isFilterParams = Options.Filter
+
+	local fNormal = isFilterParams and FontEID9 or FontOutline
+	local fMono = isFilterParams and FontEID9 or FontMono
+	local curScale = isFilterParams and 1.0 or 0.5
+	-- 缩小滤镜模式下的行间距，让排版更紧凑
+	local lineHeight = isFilterParams and (fNormal:GetLineHeight() - 4) or ((FontOutline:GetLineHeight() / 2) + 4)
+
 	local startPos = Vector(4 + hudOffset * 20, 195 + hudOffset * 10)
+	if isFilterParams then
+		startPos = startPos + Vector(-2, -4) -- 往左上偏移一点，弥补因为字体变大而留下的更多空白
+	end
 
 	local cWhite = ThemeManager:GetTextColor()
 	local cRed = KColor(1, 0, 0, 1)
@@ -1907,10 +1925,12 @@ local function RenderHud()
 	local timerComp = GetTimerComponents()
 	local min, sec, ms = timerComp.Minutes, timerComp.Seconds, timerComp.Milliseconds
 
-	-- 时间格式化：运行中显示一位毫秒(.5)，静止显示三位(.500)
-	local msStr
+	-- 时间格式化：运行中且滤镜下不显示毫秒，静止显示三位(.500)
+	local msStr = ""
 	if Data.Runtime.State == Shared.State.RUNNING then
-		msStr = string.format(".%d", math.floor(ms / 100))
+		if not isFilterParams then
+			msStr = string.format(".%d", math.floor(ms / 100))
+		end
 	else
 		msStr = string.format(".%03d", ms)
 	end
@@ -1920,8 +1940,8 @@ local function RenderHud()
 	-- 内部辅助绘图函数
 	-- ===========================
 	local function DrawText(font, text, x, y, color)
-		font:DrawStringScaledUTF8(text, x, y, scale, scale, color, 0, false)
-		return font:GetStringWidthUTF8(text) * scale
+		font:DrawStringScaledUTF8(text, x, y, curScale, curScale, color, 0, false)
+		return font:GetStringWidthUTF8(text) * curScale
 	end
 
 	-- ===========================
@@ -1944,27 +1964,27 @@ local function RenderHud()
 	-- ===========================
 	local cursorX = startPos.X
 	local cursorY = startPos.Y
-	local lineHeight = (FontOutline:GetLineHeight() / 2) + 4
 
 	-- [第一行] 当前用时
 	local limitMin = 30
 	local timeColor = (min >= limitMin) and cRed or cWhite
 
-	local labelW = DrawText(FontOutline, "用时：", cursorX, cursorY, cWhite)
-	local timeW = DrawText(FontMono, timeStr, cursorX + labelW, cursorY, timeColor)
+	local labelW = DrawText(fNormal, "用时：", cursorX, cursorY, cWhite)
+	local timeW = DrawText(fMono, timeStr, cursorX + labelW, cursorY, timeColor)
 
 	-- 先绘制（已暂停）提示（如有），并计算后续绘制基准 X
 	local baseX = cursorX + labelW + timeW
 	local extraX = baseX
 	if Data.Runtime.State == Shared.State.PAUSED then
 		local gap = 4
-		local pausedW = DrawText(FontOutline, "（已暂停）", extraX + gap, cursorY, cRed)
+		local pausedW = DrawText(fNormal, "（已暂停）", extraX + gap, cursorY, cRed)
 		extraX = extraX + gap + pausedW
 	end
 
 	if Data.Runtime.PracticeMode then
 		local pmGap = 4
-		DrawText(FontOutline, "[练]", extraX + pmGap, cursorY, KColor(1, 0.25, 0.25, 1))
+		local pracW = DrawText(fNormal, "[练]", extraX + pmGap, cursorY, KColor(1, 0.25, 0.25, 1))
+		extraX = extraX + pmGap + pracW
 	end
 
 	cursorY = cursorY + lineHeight
@@ -1978,16 +1998,19 @@ local function RenderHud()
 		goalColor = KColor(0, 1, 0, 1)
 	end
 
-	local goalLabelW = DrawText(FontOutline, "目标：", cursorX, cursorY, cWhite)
-	local goalNameW = DrawText(FontOutline, goalNameStr, cursorX + goalLabelW, cursorY, goalColor)
+	local goalLabelW = 0
+	if not isFilterParams then
+		goalLabelW = DrawText(fNormal, "目标：", cursorX, cursorY, cWhite)
+	end
+	local goalNameW = DrawText(fNormal, goalNameStr, cursorX + goalLabelW, cursorY, goalColor)
 
 	-- 在目标右侧显示死亡数（准备状态下也显示），保持在同一行
-	local gap = 8
+	local gap = isFilterParams and 4 or 8
 	local deathX = cursorX + goalLabelW + goalNameW + gap
-	local deathLabelW = DrawText(FontOutline, "死亡：", deathX, cursorY, cWhite)
+	local deathLabelW = DrawText(fNormal, "死亡：", deathX, cursorY, cWhite)
 	local deathCount = Data.Runtime.DeathCount or 0
 	local deathColor = (deathCount >= 3) and cRed or cWhite
-	DrawText(FontMono, tostring(deathCount), deathX + deathLabelW, cursorY, deathColor)
+	DrawText(fMono, tostring(deathCount), deathX + deathLabelW, cursorY, deathColor)
 
 	cursorY = cursorY + lineHeight
 
@@ -2017,9 +2040,9 @@ local function RenderHud()
 		end
 	end
 
-	local nameW = DrawText(FontOutline, pName, cursorX, cursorY, nameColor)
-	local sepW = DrawText(FontMono, " - ", cursorX + nameW, cursorY, cWhite)
-	DrawText(FontMono, seedStr, cursorX + nameW + sepW, cursorY, seedColor)
+	local nameW = DrawText(fNormal, pName, cursorX, cursorY, nameColor)
+	local sepW = DrawText(fMono, " - ", cursorX + nameW, cursorY, cWhite)
+	DrawText(fMono, seedStr, cursorX + nameW + sepW, cursorY, seedColor)
 
 	cursorY = cursorY + lineHeight
 
@@ -2027,7 +2050,10 @@ local function RenderHud()
 	if Data.Runtime.State ~= Shared.State.RUNNING then
 		local ssLabel = "超级种子："
 		local ssLabelColor = cWhite
-		local ssLabelW = DrawText(FontOutline, ssLabel, cursorX, cursorY, ssLabelColor)
+		local ssLabelW = 0
+		if not isFilterParams then
+			ssLabelW = DrawText(fNormal, ssLabel, cursorX, cursorY, ssLabelColor)
+		end
 
 		local seedText = ""
 		if Data.Runtime.State == Shared.State.READY then
@@ -2051,8 +2077,8 @@ local function RenderHud()
 			local g = 0.5 + 0.5 * math.sin(t * speed + phase + (2 * math.pi / 3))
 			local b = 0.5 + 0.5 * math.sin(t * speed + phase + (4 * math.pi / 3))
 			local color = KColor(r, g, b, 1)
-			FontMono:DrawStringScaledUTF8(ch, x, cursorY, scale, scale, color, 0, false)
-			x = x + FontMono:GetStringWidthUTF8(ch) * scale
+			fMono:DrawStringScaledUTF8(ch, x, cursorY, curScale, curScale, color, 0, false)
+			x = x + fMono:GetStringWidthUTF8(ch) * curScale
 		end
 
 		cursorY = cursorY + lineHeight
@@ -2062,7 +2088,9 @@ local function RenderHud()
 	local dynamicX = cursorX
 
 	-- 5.1 画标签
-	dynamicX = dynamicX + DrawText(FontOutline, "纪录：", dynamicX, cursorY, cWhite)
+	if not isFilterParams or Data.Runtime.State ~= Shared.State.RUNNING then
+		dynamicX = dynamicX + DrawText(fNormal, "纪录：", dynamicX, cursorY, cWhite)
+	end
 
 	-- 5.2 获取数据
 	local weight = Data.Runtime.Record.LevelWeight
@@ -2070,32 +2098,39 @@ local function RenderHud()
 
 	-- 如果权重为 0，则只显示一个“无”
 	if not weight or weight == 0 then
-		dynamicX = dynamicX + DrawText(FontOutline, "无", dynamicX, cursorY, cWhite)
+		dynamicX = dynamicX + DrawText(fNormal, "无", dynamicX, cursorY, cWhite)
 	else
 		-- 5.3 画权重 (Mono 字体)
 		local weightStr = string.format("[%s]", weight)
-		dynamicX = dynamicX + DrawText(FontMono, weightStr, dynamicX, cursorY, cWhite)
+		dynamicX = dynamicX + DrawText(fMono, weightStr, dynamicX, cursorY, cWhite)
 
 		-- 5.4 画关卡名称 (Outline 字体)
-		dynamicX = dynamicX + DrawText(FontOutline, " " .. name, dynamicX, cursorY, cWhite)
+		dynamicX = dynamicX + DrawText(fNormal, " " .. name, dynamicX, cursorY, cWhite)
 
 		-- 5.5 画时间 (Mono 字体)
-		dynamicX = dynamicX + DrawText(FontOutline, " - ", dynamicX, cursorY, cWhite)
+		dynamicX = dynamicX + DrawText(fNormal, " - ", dynamicX, cursorY, cWhite)
 		local recordStr = "00:00"
 		if Data.Runtime.Record.Time > 0 then
 			local rTime = ConvertMilliseconds(Data.Runtime.Record.Time)
 			recordStr = string.format("%02d:%02d.%03d", rTime.Minutes, rTime.Seconds, rTime.Milliseconds)
 		end
-		DrawText(FontMono, recordStr, dynamicX, cursorY, cWhite)
+		dynamicX = dynamicX + DrawText(fMono, recordStr, dynamicX, cursorY, cWhite)
+	end
+
+	-- 如果是滤镜模式，为了减少一行，把版本号拼在第五行尾部（前提是非运行状态）
+	if isFilterParams and Data.Runtime.State ~= Shared.State.RUNNING then
+		local vGap = 8
+		local versionColor = KColor(1, 1, 0, 1)
+		DrawText(fMono, "v" .. tostring(BISAI_PLUS.Version), dynamicX + vGap, cursorY, versionColor)
 	end
 
 	cursorY = cursorY + lineHeight
 
-	-- [第六行] 版本号 (非运行状态时显示)
-	if Data.Runtime.State ~= Shared.State.RUNNING then
+	-- [第六行] 版本号 (非运行状态时显示)。滤镜模式下已拼在上方的第五行尾部，因此这里跳过。
+	if not isFilterParams and Data.Runtime.State ~= Shared.State.RUNNING then
 		local versionColor = KColor(1, 1, 0, 1) -- 黄色
-		local vLabelW = DrawText(FontOutline, "版本：", cursorX, cursorY, cWhite)
-		DrawText(FontMono, "v" .. tostring(BISAI_PLUS.Version), cursorX + vLabelW, cursorY, versionColor)
+		local vLabelW = DrawText(fNormal, "版本：", cursorX, cursorY, cWhite)
+		DrawText(fMono, "v" .. tostring(BISAI_PLUS.Version), cursorX + vLabelW, cursorY, versionColor)
 	end
 end
 
