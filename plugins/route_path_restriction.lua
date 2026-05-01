@@ -21,6 +21,7 @@ end
 local function IsGoalToSpecial()
 	return BISAI_PLUS.Data.Save.Goal == BISAI_PLUS.Shared.Goal.HUSH
 		or BISAI_PLUS.Data.Save.Goal == BISAI_PLUS.Shared.Goal.ULTRA_GREED
+		or BISAI_PLUS.Data.Save.Goal == BISAI_PLUS.Shared.Goal.DELIRIUM
 end
 
 local function OnUpdate()
