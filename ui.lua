@@ -2136,6 +2136,14 @@ local function RenderHud()
 		local vLabelW = DrawText(fNormal, "版本：", cursorX, cursorY, cWhite)
 		DrawText(fMono, "v" .. tostring(BISAI_PLUS.Version), cursorX + vLabelW, cursorY, versionColor)
 	end
+
+	-- 在准备状态且开启了滤镜时，在屏幕正上方提示玩家关闭滤镜
+	if Options.Filter and Data.Runtime.State == Shared.State.READY then
+		local promptText = "如果文字模糊，请在游戏设置中关闭滤镜"
+		local screenW = Isaac.GetScreenWidth()
+		local textW = FontEID9:GetStringWidthUTF8(promptText)
+		FontEID9:DrawStringUTF8(promptText, (screenW - textW) / 2, 0, KColor(1, 1, 1, 1), 0, false)
+	end
 end
 
 MessageBus:On(Messages.Event.RUN_PAUSED, function(payload)
