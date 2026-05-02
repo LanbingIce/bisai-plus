@@ -1919,22 +1919,26 @@ local function RenderHud()
 		startPos = startPos + Vector(-2, -4) -- 往左上偏移一点，弥补因为字体变大而留下的更多空白
 	end
 
-	local cWhite = ThemeManager:GetTextColor()
-	local cRed = KColor(1, 0, 0, 1)
+	local cWhiteOri = ThemeManager:GetTextColor()
+	local cRedOri = KColor(1, 0, 0, 1)
+
+	local textAlpha = Data.Runtime.State == Shared.State.RUNNING and 0.5 or 1.0
+	local cWhite = KColor(cWhiteOri.Red, cWhiteOri.Green, cWhiteOri.Blue, textAlpha)
+	local cRed = KColor(1, 0, 0, textAlpha)
+	local cGreen = KColor(0, 1, 0, textAlpha)
+	local cYellow = KColor(1, 1, 0, textAlpha)
 
 	local timerComp = GetTimerComponents()
 	local min, sec, ms = timerComp.Minutes, timerComp.Seconds, timerComp.Milliseconds
 
-	-- 时间格式化：运行中且滤镜下不显示毫秒，静止显示三位(.500)
+	-- 时间格式化：运行中显示一位毫秒(.5)，静止显示三位(.500)
 	local msStr = ""
 	if Data.Runtime.State == Shared.State.RUNNING then
-		if not isFilterParams then
-			msStr = string.format(".%d", math.floor(ms / 100))
-		end
+		msStr = string.format(".%d", math.floor(ms / 100))
 	else
 		msStr = string.format(".%03d", ms)
 	end
-	local timeStr = string.format("%02d:%02d%s", min, sec, msStr)
+	local timeStr = string.format("[%02d:%02d%s]", min, sec, msStr)
 
 	-- ===========================
 	-- 内部辅助绘图函数
@@ -1967,9 +1971,9 @@ local function RenderHud()
 
 	-- [第一行] 当前用时
 	local limitMin = 30
-	local timeColor = (min >= limitMin) and cRed or cWhite
+	local timeColor = (min >= limitMin) and cRedOri or cWhiteOri
 
-	local labelW = DrawText(fNormal, "用时：", cursorX, cursorY, cWhite)
+	local labelW = DrawText(fNormal, "用时：", cursorX, cursorY, cWhiteOri)
 	local timeW = DrawText(fMono, timeStr, cursorX + labelW, cursorY, timeColor)
 
 	-- 先绘制（已暂停）提示（如有），并计算后续绘制基准 X
@@ -1995,7 +1999,7 @@ local function RenderHud()
 
 	local goalColor = cWhite
 	if Data.Runtime.State ~= Shared.State.RUNNING then
-		goalColor = KColor(0, 1, 0, 1)
+		goalColor = cGreen
 	end
 
 	local goalLabelW = 0
@@ -2028,8 +2032,8 @@ local function RenderHud()
 	local nameColor = cWhite
 	local seedColor = cWhite
 	if Data.Runtime.State ~= Shared.State.RUNNING then
-		nameColor = KColor(0, 1, 0, 1)
-		seedColor = KColor(0, 1, 0, 1)
+		nameColor = cGreen
+		seedColor = cGreen
 	end
 
 	if Data.Runtime.State ~= Shared.State.READY then
@@ -2120,7 +2124,7 @@ local function RenderHud()
 	-- 如果是滤镜模式，为了减少一行，把版本号拼在第五行尾部（前提是非运行状态）
 	if isFilterParams and Data.Runtime.State ~= Shared.State.RUNNING then
 		local vGap = 8
-		local versionColor = KColor(1, 1, 0, 1)
+		local versionColor = cYellow
 		DrawText(fMono, "v" .. tostring(BISAI_PLUS.Version), dynamicX + vGap, cursorY, versionColor)
 	end
 
@@ -2128,7 +2132,7 @@ local function RenderHud()
 
 	-- [第六行] 版本号 (非运行状态时显示)。滤镜模式下已拼在上方的第五行尾部，因此这里跳过。
 	if not isFilterParams and Data.Runtime.State ~= Shared.State.RUNNING then
-		local versionColor = KColor(1, 1, 0, 1) -- 黄色
+		local versionColor = cYellow -- 黄色
 		local vLabelW = DrawText(fNormal, "版本：", cursorX, cursorY, cWhite)
 		DrawText(fMono, "v" .. tostring(BISAI_PLUS.Version), cursorX + vLabelW, cursorY, versionColor)
 	end
