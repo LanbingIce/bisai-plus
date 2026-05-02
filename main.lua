@@ -386,6 +386,7 @@ BISAI_PLUS.LoadPlugin(
 )
 BISAI_PLUS.LoadPlugin("mechanic_revive", "结算之后，让角色免死")
 BISAI_PLUS.LoadPlugin("mechanic_room_radar", "房间雷达功能")
+BISAI_PLUS.LoadPlugin("mechanic_sacrifice_spike_retract", "献祭11次后自动缩回尖刺")
 BISAI_PLUS.LoadPlugin("mechanic_stop_game_time", "准备状态下，暂停游戏时间")
 BISAI_PLUS.LoadPlugin("mechanic_time_limit", "时间限制，超过30分钟根据时间增加碎心")
 BISAI_PLUS.LoadPlugin("mechanic_void_map", "精神错乱终点，进入虚空层时显示地图")
