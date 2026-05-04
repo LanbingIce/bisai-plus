@@ -93,7 +93,11 @@ local function TryOpenBranchDoors()
 
 	for i = 0, DoorSlot.NUM_DOOR_SLOTS - 1 do
 		local door = room:GetDoor(i)
-		if door and door:IsLocked() and door:TryUnlock(Game():GetPlayer(0), true) then
+		if door and door:IsLocked() then
+			-- 绕过 TryUnlock，避免触发“蓝钥匙”饰品
+			door:SetLocked(false)
+			-- 手动触发开门和播放解锁音效，弥补 setlocked 缺失的动画和声音
+			SFXManager():Play(SoundEffect.SOUND_UNLOCK00)
 			break
 		end
 	end
