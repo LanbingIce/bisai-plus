@@ -14,11 +14,6 @@ local function OnUseItem(_, item, rng, player, flags, slot, varData)
 		return
 	end
 
-	-- 排除有七巧板的情况
-	if player:HasCollectible(CollectibleType.COLLECTIBLE_MISSING_NO) then
-		return
-	end
-
 	-- 生成一个混沌魂火
 	local itemWisp = (
 		Game():Spawn(
