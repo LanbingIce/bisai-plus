@@ -312,6 +312,26 @@ local function OnUsePill(_, pillEffect, player, useFlags)
 	player:GetData().BisaiPlus_IsAddicted = true
 end
 
+local function OnUseItem(_, item, rng, player, flags, slot, varData)
+	-- 确保是真正的角色，而不是小罗饰品或者店长稻草人之类的
+	if not BISAI_PLUS.GameUtils.IsRealPlayer(player) then
+		return
+	end
+
+	-- 确保是在大贪婪房间内
+	if not IsUltraGreedRoom() then
+		return
+	end
+
+	-- 确保使用的道具是D7
+	if item ~= CollectibleType.COLLECTIBLE_D7 then
+		return
+	end
+
+	-- 阻止使用D7
+	return true
+end
+
 BISAI_PLUS:AddCallback(ModCallbacks.MC_NPC_UPDATE, OnNPCUpdate)
 BISAI_PLUS:AddCallback(ModCallbacks.MC_POST_UPDATE, OnUpdate)
 BISAI_PLUS:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, OnNewRoom)
@@ -319,3 +339,4 @@ BISAI_PLUS:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, OnClearAward)
 BISAI_PLUS:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, OnStarUpdate, FamiliarVariant.STAR_OF_BETHLEHEM)
 BISAI_PLUS:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, OnEntityTakeDamage)
 BISAI_PLUS:AddCallback(ModCallbacks.MC_USE_PILL, OnUsePill)
+BISAI_PLUS:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, OnUseItem)
