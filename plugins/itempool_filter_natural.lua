@@ -17,6 +17,23 @@ local NaturalItemPoolWeights = {
 		[CollectibleType.COLLECTIBLE_FLIP] = 0, -- 生死逆转
 		[CollectibleType.COLLECTIBLE_SPINDOWN_DICE] = 0, -- 计数二十面骰
 	},
+
+	-- 恶魔房道具池
+	[ItemPoolType.POOL_DEVIL] = {
+		[CollectibleType.COLLECTIBLE_WE_NEED_TO_GO_DEEPER] = 0, -- 我们需要深入挖掘！
+	},
+
+	-- 商店道具池
+	[ItemPoolType.POOL_SHOP] = {
+		[CollectibleType.COLLECTIBLE_NOTCHED_AXE] = 0, -- 残损铁镐
+		[CollectibleType.COLLECTIBLE_CARD_READING] = 0, -- 牌意解读
+	},
+
+	-- 星象房道具池
+	[ItemPoolType.POOL_PLANETARIUM] = {
+		[CollectibleType.COLLECTIBLE_TERRA] = 0, -- 地球
+		[CollectibleType.COLLECTIBLE_MERCURIUS] = 0, -- 水星
+	},
 }
 
 -- 检查指定种子下生成的道具是否应该被保留
