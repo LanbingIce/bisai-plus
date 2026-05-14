@@ -163,6 +163,14 @@ local function OnUpdate()
 	-- 将房间设为未清理状态
 	room:SetClear(false)
 
+	local num = Game():GetNumPlayers()
+	for i = 0, num - 1 do
+		local player = Isaac.GetPlayer(i)
+		if player:HasCollectible(CollectibleType.COLLECTIBLE_BLANKET) then
+			player:GetEffects():AddCollectibleEffect(CollectibleType.COLLECTIBLE_HOLY_MANTLE, true)
+		end
+	end
+
 	local music = MusicManager()
 	music:Crossfade(Music.MUSIC_ULTRAGREED_BOSS)
 end
