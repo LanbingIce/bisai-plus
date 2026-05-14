@@ -259,19 +259,20 @@ end
 
 -- === 终极版寻路函数：健壮性/权重/惩罚机制/多BOSS支持 ===
 -- @return: table(路径列表) 或 nil(无路/出错)
-function GameUtils.GetPathToBossWeighted(startIdx)
+function GameUtils.GetPathToBossWeighted(startIdx, dimension)
 	local game = Game()
 	local level = game:GetLevel()
 	if not startIdx then
 		startIdx = level:GetCurrentRoomIndex()
 	end
+	dimension = dimension or -1
 
 	-- [防守 1] 索引越界检查 (不在地图上)
 	if startIdx < 0 then
 		return nil
 	end
 
-	local startDesc = level:GetRoomByIdx(startIdx)
+	local startDesc = level:GetRoomByIdx(startIdx, dimension)
 	-- [防守 2] 房间数据不存在
 	if startDesc.ListIndex < 0 then
 		return nil
@@ -288,7 +289,7 @@ function GameUtils.GetPathToBossWeighted(startIdx)
 
 	-- 遍历全图
 	for i = 0, 168 do
-		local roomDesc = level:GetRoomByIdx(i)
+		local roomDesc = level:GetRoomByIdx(i, dimension)
 		if roomDesc.ListIndex >= 0 then
 			local uuid = roomDesc.SafeGridIndex
 			local rType = roomDesc.Data.Type
@@ -316,7 +317,7 @@ function GameUtils.GetPathToBossWeighted(startIdx)
 				local nx, ny = x + dir[1], y + dir[2]
 				if nx >= 0 and nx < WIDTH and ny >= 0 and ny < 13 then
 					local neighborIdx = ny * WIDTH + nx
-					local neighborDesc = level:GetRoomByIdx(neighborIdx)
+					local neighborDesc = level:GetRoomByIdx(neighborIdx, dimension)
 					if neighborDesc.ListIndex >= 0 then
 						local neiUUID = neighborDesc.SafeGridIndex
 

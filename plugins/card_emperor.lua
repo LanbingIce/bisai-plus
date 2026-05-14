@@ -19,6 +19,16 @@ local function GetValidLastPositiveIndex()
 	return 84
 end
 
+local function GetCurrentDimension(level)
+	local roomDesc = level:GetCurrentRoomDesc()
+	for i = 0, 2 do
+		if GetPtrHash(roomDesc) == GetPtrHash(level:GetRoomByIdx(roomDesc.SafeGridIndex, i)) then
+			return i
+		end
+	end
+	return -1
+end
+
 local function OnUseCard(_, cardID, player, useFlags)
 	if not BISAI_PLUS.GameUtils.IsRealPlayer(player) then
 		return
@@ -52,7 +62,7 @@ local function OnUseCard(_, cardID, player, useFlags)
 	end
 
 	-- 获取路径
-	local path = BISAI_PLUS.GameUtils.GetPathToBossWeighted(startRoomIndex)
+	local path = BISAI_PLUS.GameUtils.GetPathToBossWeighted(startRoomIndex, GetCurrentDimension(level))
 	if not path then -- 这里不会触发，如果触发了，说明有我没考虑到的情况，需要修复
 		-- 看到太阳卡的动画就知道出问题了
 		player:UseCard(Card.CARD_SUN)
