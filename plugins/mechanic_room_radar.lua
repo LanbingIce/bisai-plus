@@ -8,6 +8,16 @@ local GhostSprite = Sprite()
 GhostSprite.Scale = Vector(0.5, 0.5)
 GhostSprite.Color = Color(1, 1, 1, 0.5, 0, 0, 0)
 
+-- 为不同分组配置不同的滤镜颜色（红，绿，蓝，黄，紫，青）
+local GROUP_COLORS = {
+	Color(1, 0.3, 0.3, 1, 0, 0, 0),
+	Color(0.3, 1, 0.3, 1, 0, 0, 0),
+	Color(0.3, 0.5, 1, 1, 0, 0, 0),
+	Color(1, 1, 0.3, 1, 0, 0, 0),
+	Color(1, 0.3, 1, 1, 0, 0, 0),
+	Color(0.3, 1, 1, 1, 0, 0, 0),
+}
+
 -- 经过测试，问号贴图上有6个像素点，他们的任何一个颜色通道，都不会和任何道具重复
 -- 因此我们只需要对比其中一个点的其中一个颜色通道，即可高效判断其是否是问号道具
 -- Vector(-4, -29)
@@ -227,6 +237,7 @@ local function ProcessRadarItem(item, roomCenter, validItems, hasFlip, isMirror,
 	end
 
 	local hasActiveGhost = (hasFlip and ghostId ~= nil)
+	local optionsIdx = pickup.OptionsPickupIndex
 
 	-- 1. 插入表层、玩家眼睛直接能看到的“表相道具”属性
 	table.insert(validItems, {
@@ -236,6 +247,7 @@ local function ProcessRadarItem(item, roomCenter, validItems, hasFlip, isMirror,
 		DisplayType = pickup.SubType,
 		IsBlind = isBlind,
 		HasGhostSibling = hasActiveGhost,
+		OptionsPickupIndex = optionsIdx,
 	})
 
 	-- 2. 如果检查到他背后有灵（也就是底座下藏有 Flip 道具），且当前角色带有 Flip 道具
@@ -248,6 +260,7 @@ local function ProcessRadarItem(item, roomCenter, validItems, hasFlip, isMirror,
 			DisplayType = ghostId, -- 将底裤展示的值覆盖显示为我们追踪到的结果
 			IsBlind = isBlind,
 			HasGhostSibling = true,
+			OptionsPickupIndex = optionsIdx,
 		})
 	end
 end
@@ -354,7 +367,7 @@ local function GatherRadarItems()
 end
 
 -- 专门渲染“虚影层道具”的方法（虚化、位移、无底座）
-local function RenderGhostItem(data, sprite, drawPos, isMirror, itemConfig)
+local function RenderGhostItem(data, sprite, drawPos, isMirror, itemConfig, tintColor)
 	local gfxParams = itemConfig:GetCollectible(data.DisplayType)
 	if not gfxParams then
 		return
@@ -390,8 +403,18 @@ local function RenderGhostItem(data, sprite, drawPos, isMirror, itemConfig)
 		GhostSprite.FlipX = not oldFlipX
 	end
 
+	local oldColor = GhostSprite.Color
+	if tintColor then
+		GhostSprite.Color =
+			Color(tintColor.R, tintColor.G, tintColor.B, oldColor.A, tintColor.RO, tintColor.GO, tintColor.BO)
+	end
+
 	-- 最终执行屏幕上的画图打印
 	GhostSprite:Render(drawPos + ghostOffset, Vector.Zero, Vector.Zero)
+
+	if tintColor then
+		GhostSprite.Color = oldColor
+	end
 
 	if isMirror then
 		GhostSprite.FlipX = oldFlipX
@@ -399,19 +422,31 @@ local function RenderGhostItem(data, sprite, drawPos, isMirror, itemConfig)
 end
 
 -- 对原有的现身道具的简单缩小渲染
-local function RenderNormalItem(sprite, drawPos, isMirror)
+local function RenderNormalItem(sprite, drawPos, isMirror, tintColor)
 	local oldScaleX, oldScaleY = sprite.Scale.X, sprite.Scale.Y
 	local oldFlipX = sprite.FlipX
+
+	-- Isaac 的 API 中获取的 Color 对象可能是底层地址引用，必须深拷贝保存原有值
+	local orig = sprite.Color
+	local oldColor = Color(orig.R, orig.G, orig.B, orig.A, orig.RO, orig.GO, orig.BO)
 
 	sprite.Scale = Vector(0.5, 0.5)
 	if isMirror then
 		sprite.FlipX = not oldFlipX
 	end
 
+	if tintColor then
+		sprite.Color =
+			Color(tintColor.R, tintColor.G, tintColor.B, oldColor.A, tintColor.RO, tintColor.GO, tintColor.BO)
+	end
+
 	-- 直接基于源实体自带的精灵动画渲染当前帧
 	sprite:Render(drawPos, Vector.Zero, Vector.Zero)
 
 	-- 用完恢复引擎默认属性，以免导致下一次渲染比例跑偏
+	if tintColor then
+		sprite.Color = oldColor
+	end
 	sprite.Scale = Vector(oldScaleX, oldScaleY)
 	if isMirror then
 		sprite.FlipX = oldFlipX
@@ -420,6 +455,21 @@ end
 
 -- 实际执行道具集合渲染器统筹
 local function DrawRadarItems(validItems, radarCenterPos, isMirror, radarScale)
+	-- 分拣并标记多选一分组
+	local optionsGroups = {}
+	local groupCount = 0
+
+	for _, data in ipairs(validItems) do
+		local optIdx = data.OptionsPickupIndex
+		if optIdx and optIdx > 0 then
+			if not optionsGroups[optIdx] then
+				groupCount = groupCount + 1
+				optionsGroups[optIdx] = groupCount
+			end
+			data.GroupNum = optionsGroups[optIdx]
+		end
+	end
+
 	-- 按照 Y 轴坐标从上往下排渲染顺序避免越级遮盖。在同一水平面上，让实效在上方，虚像渲染在下方
 	table.sort(validItems, function(a, b)
 		if math.abs(a.Item.Position.Y - b.Item.Position.Y) < 0.1 then
@@ -433,12 +483,14 @@ local function DrawRadarItems(validItems, radarCenterPos, isMirror, radarScale)
 		-- 根据其针对房间的向外发散距离应用缩放常数 radarScale
 		local drawPos = radarCenterPos + (data.Offset * radarScale)
 		local sprite = data.Item:GetSprite()
+		local tintColor = (groupCount > 1 and data.GroupNum) and GROUP_COLORS[(data.GroupNum - 1) % #GROUP_COLORS + 1]
+			or nil
 
 		-- 切流：如果是虚像表单数据，则用滤镜和剥离底座的方式渲染；如果是实物表单数据，则原始渲染
 		if data.IsGhost then
-			RenderGhostItem(data, sprite, drawPos, isMirror, itemConfig)
+			RenderGhostItem(data, sprite, drawPos, isMirror, itemConfig, tintColor)
 		else
-			RenderNormalItem(sprite, drawPos, isMirror)
+			RenderNormalItem(sprite, drawPos, isMirror, tintColor)
 		end
 	end
 end
@@ -500,6 +552,25 @@ local function DrawRadarDoors(radarCenterPos, isMirror, radarScale)
 	end
 end
 
+-- 判断当前房间是否存在多组多选一道具
+local function HasMultipleOptionGroups()
+	local items = Isaac.FindByType(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_COLLECTIBLE)
+	local optionsGroups = {}
+	local groupCount = 0
+
+	for _, item in ipairs(items) do
+		local optIdx = item:ToPickup().OptionsPickupIndex
+		if optIdx and optIdx > 0 then
+			if not optionsGroups[optIdx] then
+				groupCount = groupCount + 1
+				optionsGroups[optIdx] = true
+			end
+		end
+	end
+
+	return groupCount > 1
+end
+
 local function OnRender()
 	-- 如果未按住地图键，就不显示雷达
 	if not Input.IsActionPressed(ButtonAction.ACTION_MAP, Game():GetPlayer(0).ControllerIndex) then
@@ -512,10 +583,11 @@ local function OnRender()
 	-- 判定是否为大房间 (1x1=1, IH半房=2, IV半房=3。大于3说明尺寸必定大过1x1)
 	local isLargeRoom = (shape > RoomShape.ROOMSHAPE_IV)
 	local hasFlip = BISAI_PLUS.GameUtils.HasCollectible(CollectibleType.COLLECTIBLE_FLIP)
+	local hasMultipleOptions = HasMultipleOptionGroups()
 	-- 看不见地图诅咒 (Curse of the Lost) 检测
 	local hasLostCurse = (Game():GetLevel():GetCurses() & LevelCurse.CURSE_OF_THE_LOST) > 0
 
-	local showItemRadar = isLargeRoom or hasFlip
+	local showItemRadar = isLargeRoom or hasFlip or hasMultipleOptions
 	local showDoorRadar = isLargeRoom and hasLostCurse
 
 	-- 若没有任何需要显示的雷达项，直接退出
