@@ -50,7 +50,20 @@ local function OnUseCard(_, cardID, player, useFlags)
 		return
 	end
 
+	-- 死亡证明里面不改
+	if startDimension == 2 then
+		return
+	end
+
 	local stage = level:GetStage()
+
+	local isStage2 = stage == LevelStage.STAGE2_1 or stage == LevelStage.STAGE2_2
+
+	-- 神庙逃亡里面不改
+	if startDimension == 1 and isStage2 then
+		return
+	end
+
 	-- 虚空层不改
 	if stage == LevelStage.STAGE7 then
 		return
