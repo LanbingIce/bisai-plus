@@ -68,7 +68,7 @@ local function OnUseCard(_, cardID, player, useFlags)
 	end
 
 	-- 如果路径长度不够，不改
-	if #path < targetIndex then
+	if #path <= targetIndex then
 		return
 	end
 
