@@ -257,7 +257,7 @@ function GameUtils.GetConnectedNeighborIndex(level)
 	return -1
 end
 
--- === 终极版寻路函数：健壮性/权重/多BOSS支持 ===
+-- === 终极版寻路函数：健壮性/权重/惩罚机制/多BOSS支持 ===
 -- @return: table(路径列表) 或 nil(无路/出错)
 function GameUtils.GetPathToBossWeighted(startIdx)
 	local game = Game()
@@ -277,20 +277,11 @@ function GameUtils.GetPathToBossWeighted(startIdx)
 		return nil
 	end
 
-	-- [防守 3] 处于特殊逻辑房间 (无法通过普通门移动)
-	local invalidTypes = {
-		[RoomType.ROOM_DUNGEON] = true, -- 爬行空间/地下室
-		[RoomType.ROOM_BLACK_MARKET] = true, -- 黑市
-		[RoomType.ROOM_NULL] = true, -- 空数据
-	}
-	if invalidTypes[startDesc.Data.Type] then
-		return nil
-	end
-
 	local startUUID = startDesc.SafeGridIndex
 
 	-- === 预处理 ===
 	local roomSizes = {} -- 记录房间大小权重
+	local roomTypes = {} -- 【新增】：记录每个房间的真实Type，用于后续计算惩罚权重
 	local graph = {} -- 邻接表
 	local potentialBosses = {} -- 所有可能的 BOSS 目标
 	local WIDTH = 13
@@ -307,6 +298,9 @@ function GameUtils.GetPathToBossWeighted(startIdx)
 				roomSizes[uuid] = 0
 			end
 			roomSizes[uuid] = roomSizes[uuid] + 1
+
+			-- 【新增】：将房间类型存下来
+			roomTypes[uuid] = rType
 
 			-- [多 BOSS 支持] 收集所有非当前的 BOSS 房
 			if rType == RoomType.ROOM_BOSS and uuid ~= startUUID then
@@ -325,14 +319,10 @@ function GameUtils.GetPathToBossWeighted(startIdx)
 					local neighborDesc = level:GetRoomByIdx(neighborIdx)
 					if neighborDesc.ListIndex >= 0 then
 						local neiUUID = neighborDesc.SafeGridIndex
-						local neiType = neighborDesc.Data.Type
 
-						-- [防守 4] 通行规则严格限制
-						-- 只有 普通房间 和 BOSS房间 视为“路”
-						-- 商店/宝箱房等被视为“墙”，防止把玩家导进去出不来
-						local isWalkable = (neiType == RoomType.ROOM_DEFAULT) or (neiType == RoomType.ROOM_BOSS)
+						-- [修改 防守 4] 放宽通行限制，只要不是异次元（地下室/黑市等），全部视为连通
 
-						if uuid ~= neiUUID and isWalkable then
+						if uuid ~= neiUUID then
 							if not graph[uuid] then
 								graph[uuid] = {}
 							end
@@ -385,10 +375,17 @@ function GameUtils.GetPathToBossWeighted(startIdx)
 		table.remove(openSet, minIndex)
 
 		-- [防守 6] 孤岛检查
-		-- 如果 graph[current] 为空 (比如周围全是特殊房间)，循环跳过，路径自然断开
 		if graph[current] then
 			for _, neighborUUID in ipairs(graph[current]) do
-				local weight = 100 + (roomSizes[neighborUUID] or 1)
+				-- 【新增】：极简惩罚权重逻辑
+				local penalty = 0
+				-- 只要不是普通房间，一律给予 10000 的高额过路费
+				if roomTypes[neighborUUID] ~= RoomType.ROOM_DEFAULT then
+					penalty = 10000
+				end
+
+				-- 计算总代价：基础代价 100 + 惩罚权重 + 大房间偏移
+				local weight = 100 + penalty + (roomSizes[neighborUUID] or 1)
 				local newDist = (dist[current] or 0) + weight
 				local oldDist = dist[neighborUUID] or math.huge
 
