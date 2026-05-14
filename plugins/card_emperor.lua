@@ -1,6 +1,16 @@
 local positiveRoomHistory = {}
 local MAX_HISTORY = 2 -- 只需要保留两个历史记录即可应对发光沙漏
 
+local function GetCurrentDimension(level)
+	local roomDesc = level:GetCurrentRoomDesc()
+	for i = 0, 2 do
+		if GetPtrHash(roomDesc) == GetPtrHash(level:GetRoomByIdx(roomDesc.SafeGridIndex, i)) then
+			return i
+		end
+	end
+	return -1
+end
+
 -- 获取当前有效最新的正索引 (自带时间线校验)
 local function GetValidLastPositiveIndex()
 	local currentFrame = Game():GetFrameCount()
@@ -11,22 +21,12 @@ local function GetValidLastPositiveIndex()
 			table.remove(positiveRoomHistory, i)
 		else
 			-- 找到第一个帧数小于等于当前帧数的记录
-			return positiveRoomHistory[i].index
+			return positiveRoomHistory[i].index, positiveRoomHistory[i].dimension
 		end
 	end
 
 	-- 保底机制：如果记录全被清空，返回初始房间的索引
-	return 84
-end
-
-local function GetCurrentDimension(level)
-	local roomDesc = level:GetCurrentRoomDesc()
-	for i = 0, 2 do
-		if GetPtrHash(roomDesc) == GetPtrHash(level:GetRoomByIdx(roomDesc.SafeGridIndex, i)) then
-			return i
-		end
-	end
-	return -1
+	return 84, 0
 end
 
 local function OnUseCard(_, cardID, player, useFlags)
@@ -42,9 +42,9 @@ local function OnUseCard(_, cardID, player, useFlags)
 
 	-- 使用记录的上一个正索引房间作为起点，如果当前房间具有正索引，则记录的就是当前房间
 	-- 上一个房间的索引应该始终能产生有效路径，如果不能，说明有我没考虑到的情况
-	local startRoomIndex = GetValidLastPositiveIndex()
+	local startRoomIndex, startDimension = GetValidLastPositiveIndex()
 
-	local roomData = level:GetRoomByIdx(startRoomIndex).Data
+	local roomData = level:GetRoomByIdx(startRoomIndex, startDimension).Data
 	-- 起点房间是BOSS房，则不修改效果
 	if roomData and roomData.Type == RoomType.ROOM_BOSS then
 		return
@@ -62,7 +62,7 @@ local function OnUseCard(_, cardID, player, useFlags)
 	end
 
 	-- 获取路径
-	local path = BISAI_PLUS.GameUtils.GetPathToBossWeighted(startRoomIndex, GetCurrentDimension(level))
+	local path = BISAI_PLUS.GameUtils.GetPathToBossWeighted(startRoomIndex, startDimension)
 	if not path then -- 这里不会触发，如果触发了，说明有我没考虑到的情况，需要修复
 		-- 看到太阳卡的动画就知道出问题了
 		player:UseCard(Card.CARD_SUN)
@@ -96,7 +96,11 @@ local function OnNewRoom()
 
 	-- 如果当前房间是正索引，更新历史记录
 	if currentRoomIndex >= 0 then
-		table.insert(positiveRoomHistory, { frame = currentFrame, index = currentRoomIndex })
+		local currentDimension = GetCurrentDimension(level)
+		table.insert(
+			positiveRoomHistory,
+			{ frame = currentFrame, index = currentRoomIndex, dimension = currentDimension }
+		)
 
 		-- 维持最大长度为2
 		if #positiveRoomHistory > MAX_HISTORY then
