@@ -38,7 +38,7 @@ function GameUtils.GetStageInfo(record)
 		[LevelStage.STAGE3_2] = { "深牢", "坟场", "阴湿深牢", nil, "陵墓", "炼狱" },
 		[LevelStage.STAGE4_1] = { "子宫", "血宫", "结痂子宫", nil, "尸宫" },
 		[LevelStage.STAGE4_2] = { "子宫", "血宫", "结痂子宫", nil, "尸宫" },
-		[LevelStage.STAGE4_3] = { "？？？" },
+		[LevelStage.STAGE4_3] = { "？？？", nil, nil, nil, "？" },
 		[LevelStage.STAGE5] = { "阴间", "教堂" },
 		[LevelStage.STAGE6] = { "暗室", "玩具箱" },
 		[LevelStage.STAGE7] = { "虚空" },
