@@ -259,6 +259,14 @@ local function OnEntityTakeDamage(_, entity, amount, damageFlags, source, countd
 		return
 	end
 
+	-- 确保角色没有普通模式的教条
+	if
+		player:HasCollectible(CollectibleType.COLLECTIBLE_DOGMA)
+		and Game().Difficulty == Difficulty.DIFFICULTY_NORMAL
+	then
+		return
+	end
+
 	-- 确保角色没有圣饼效果
 	if player:GetEffects():HasCollectibleEffect(CollectibleType.COLLECTIBLE_WAFER) then
 		return
