@@ -283,6 +283,10 @@ local function AddStyledButton(windowName, pos, size, text, onClick, highlightCh
 		.. tostring(onHover)
 	local btn
 
+	-- 提前计算好文本宽度和相对 X 偏移，只计算一次，避免每帧重复计算消耗性能
+	local textWidth = FontPlain:GetStringWidthUTF8(text) * 0.5
+	local textOffsetX = (size.X - textWidth) / 2
+
 	local function OnRender(renderPos)
 		local isHovered = btn and btn.IsSelected and btn.IsSelected > 0
 
@@ -310,7 +314,7 @@ local function AddStyledButton(windowName, pos, size, text, onClick, highlightCh
 			TextBoxSprite:RenderLayer(1, renderPos + Vector(1, 1))
 		end
 		local textColor = ThemeManager:GetButtonTextColor()
-		FontPlain:DrawStringScaledUTF8(text, renderPos.X + 4, renderPos.Y + 3, 0.5, 0.5, textColor, 0, false)
+		FontPlain:DrawStringScaledUTF8(text, renderPos.X + textOffsetX, renderPos.Y + 3, 0.5, 0.5, textColor, 0, false)
 	end
 
 	btn = WGA.AddButton(windowName, buttonName, pos, size.X, size.Y, NIL_SPRITE, onClick, OnRender)
