@@ -59,9 +59,15 @@ Shared.GoalData = {
 			return Game():GetLevel():GetStage() == LevelStage.STAGE7
 		end,
 		OnSelect = function()
-			Dispatcher:Dispatch(function()
+			local action = function()
 				Game():ShowHallucination(30)
-			end)
+			end
+
+			if BISAI_PLUS.IsRendering then
+				Dispatcher:Dispatch(action)
+			else
+				action()
+			end
 		end,
 	},
 	[Shared.Goal.MOTHER] = {

@@ -2234,6 +2234,8 @@ local function OnGetShaderParams(_, name)
 		return
 	end
 
+	BISAI_PLUS.IsRendering = true
+
 	-- 当分辨率改变时，如果是准备状态，重新开关一下主界面
 	local sWidth = Isaac.GetScreenWidth()
 	local sHeight = Isaac.GetScreenHeight()
@@ -2270,6 +2272,8 @@ local function OnGetShaderParams(_, name)
 	if Data.Runtime.State == Shared.State.PAUSED or Data.Runtime.State == Shared.State.FINISHED then
 		EnsureControlsWindow()
 	end
+
+	BISAI_PLUS.IsRendering = false
 end
 
 local function OnPlayerInit()
