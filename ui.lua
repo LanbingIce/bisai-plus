@@ -228,13 +228,19 @@ local function StartRun(runConfig)
 	local seed = runConfig.Seed or Game():GetSeeds():GetStartSeed()
 	local goal = runConfig.Goal or Data.Runtime.Goal
 	local playerType = runConfig.PlayerType or Game():GetPlayer(0):GetPlayerType()
+	-- 设置一下角色和种子
+	MessageBus:Send(Messages.Command.SET_PLAYER_TYPE, { PlayerType = playerType })
+	MessageBus:Send(Messages.Command.SET_SEED, { Seed = seed })
+	-- 下一帧发送开始比赛的命令（实际上会到下一局的第一帧）
 
-	MessageBus:Send(Messages.Command.START_RUN, {
-		Goal = goal,
-		PlayerType = playerType,
-		Seed = seed,
-	})
-	MessageBus:Send(Messages.Command.PAUSE_RUN) -- 开始游戏时先进入暂停状态，防止玩家不小心选错终点
+	Dispatcher:Dispatch(function()
+		MessageBus:Send(Messages.Command.START_RUN, {
+			Goal = goal,
+			PlayerType = playerType,
+			Seed = seed,
+		})
+		MessageBus:Send(Messages.Command.PAUSE_RUN) -- 开始游戏时先进入暂停状态，防止玩家不小心选错终点
+	end)
 end
 
 local function SafeCloseWindow(windowName)
@@ -2305,13 +2311,7 @@ local function OnExecuteCmd(_, cmd, args)
 		-- 无论什么原因，解码失败都要返回
 		return
 	end
-	-- 设置一下角色和种子
-	MessageBus:Send(Messages.Command.SET_PLAYER_TYPE, { PlayerType = runConfig.PlayerType })
-	MessageBus:Send(Messages.Command.SET_SEED, { Seed = runConfig.Seed })
-	-- 下一帧发送开始比赛的命令（实际上会到下一局的第一帧）
-	Dispatcher:Dispatch(function()
-		StartRun(runConfig)
-	end)
+	StartRun(runConfig)
 end
 
 do
