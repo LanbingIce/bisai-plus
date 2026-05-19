@@ -220,6 +220,15 @@ local function RollPlayerType()
 	MessageBus:Send(Messages.Command.SET_SEED, { Seed = seed })
 end
 
+local function RollSeedOnly()
+	SFXManager():Play(SoundEffect.SOUND_CHARACTER_SELECT_LEFT)
+	local seed = 0
+	while seed == 0 do
+		seed = Random()
+	end
+	MessageBus:Send(Messages.Command.SET_SEED, { Seed = seed })
+end
+
 local function StartRun(runConfig)
 	if not runConfig then
 		runConfig = {}
@@ -1438,8 +1447,8 @@ function EnsureMainWindow()
 
 		AddStyledButton(
 			WindowName.MAIN,
-			Vector(60, 12),
 			Vector(56, 12),
+			Vector(44, 12),
 			Data.Runtime.PracticeMode and "禁用练习模式" or "启用练习模式",
 			function(button)
 				if button == 0 then
@@ -1451,13 +1460,19 @@ function EnsureMainWindow()
 			end
 		)
 
-		AddStyledButton(WindowName.MAIN, Vector(118, 12), Vector(56, 12), "随机角色种子(Q)", function(button)
+		AddStyledButton(WindowName.MAIN, Vector(102, 12), Vector(30, 12), "随机种子", function(button)
+			if button == 0 then
+				RollSeedOnly()
+			end
+		end)
+
+		AddStyledButton(WindowName.MAIN, Vector(134, 12), Vector(54, 12), "随机角色种子(Q)", function(button)
 			if button == 0 then
 				RollPlayerType()
 			end
 		end)
 
-		AddStyledButton(WindowName.MAIN, Vector(176, 12), Vector(56, 12), "随机终点(E)", function(button)
+		AddStyledButton(WindowName.MAIN, Vector(190, 12), Vector(40, 12), "随机终点(E)", function(button)
 			if button == 0 then
 				RollGoal()
 			end
