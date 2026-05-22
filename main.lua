@@ -436,6 +436,7 @@ BISAI_PLUS.LoadPlugin(
 	"误入其他终点的最终房间之后，击杀最终BOSS生成虚空门"
 )
 BISAI_PLUS.LoadPlugin("qol_beast_show_hud", "祸兽终点结算后传送至第1层，以便显示属性和道具列表")
+BISAI_PLUS.LoadPlugin("qol_pause_on_game_end", "因死亡而导致游戏结束时，自动暂停计时器")
 BISAI_PLUS.LoadPlugin("qol_right_click_drop", "鼠标右键映射为丢弃键")
 BISAI_PLUS.LoadPlugin("route_beast_close_door", "祸兽路线，关闭错误的活板门，防止选手走错")
 BISAI_PLUS.LoadPlugin("route_beast_mom_exit", "祸兽路线击杀妈腿之后，允许离开BOSS房")
