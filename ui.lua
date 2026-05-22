@@ -1,4 +1,4 @@
-local MessageBus = require("bisai+.message_bus")
+﻿local MessageBus = require("bisai+.message_bus")
 local ConfigManager = require("bisai+.config_manager")
 local Shared = require("bisai+.shared")
 local Messages = require("bisai+.messages")
@@ -12,10 +12,61 @@ local WGA = include("worst gui api")
 local NIL_SPRITE = Sprite()
 local NIL_FUNCTION = function() end
 
-local FontPlain = Font()
-local FontOutline = Font()
-local FontMono = Font()
-local FontEID9 = Font()
+local function ShakeFont()
+	local actualFont = Font()
+	local wrapper = {}
+
+	-- 1. 将高频调用的绘制方法直接定义在 wrapper 上，避免每次访问时产生新闭包
+	function wrapper:DrawString(text, x, y, color, boxWidth, align)
+		local offset = Game().ScreenShakeOffset
+		actualFont:DrawString(text, x + offset.X, y + offset.Y, color, boxWidth, align)
+	end
+
+	function wrapper:DrawStringScaled(text, x, y, scaleX, scaleY, color, boxWidth, align)
+		local offset = Game().ScreenShakeOffset
+		actualFont:DrawStringScaled(text, x + offset.X, y + offset.Y, scaleX, scaleY, color, boxWidth, align)
+	end
+
+	function wrapper:DrawStringUTF8(text, x, y, color, boxWidth, align)
+		local offset = Game().ScreenShakeOffset
+		actualFont:DrawStringUTF8(text, x + offset.X, y + offset.Y, color, boxWidth, align)
+	end
+
+	function wrapper:DrawStringScaledUTF8(text, x, y, scaleX, scaleY, color, boxWidth, align)
+		local offset = Game().ScreenShakeOffset
+		actualFont:DrawStringScaledUTF8(text, x + offset.X, y + offset.Y, scaleX, scaleY, color, boxWidth, align)
+	end
+
+	-- 2. 缓存其他不需要重写的函数，防止普通方法调用也产生闭包碎片
+	local methodCache = {}
+
+	setmetatable(wrapper, {
+		__index = function(t, k)
+			local val = actualFont[k]
+			if type(val) == "function" then
+				-- 如果缓存里没有，则创建一个代理函数并存入缓存
+				if not methodCache[k] then
+					methodCache[k] = function(_, ...)
+						return val(actualFont, ...)
+					end
+				end
+				return methodCache[k]
+			end
+			-- 返回普通属性
+			return val
+		end,
+		__newindex = function(t, k, v)
+			actualFont[k] = v
+		end,
+	})
+
+	return wrapper
+end
+
+local FontPlain = ShakeFont()
+local FontOutline = ShakeFont()
+local FontMono = ShakeFont()
+local FontEID9 = ShakeFont()
 
 do
 	local modPath
