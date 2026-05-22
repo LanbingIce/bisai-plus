@@ -1995,6 +1995,14 @@ local function RenderHud()
 		startPos = startPos + Vector(-2, -4) -- 往左上偏移一点，弥补因为字体变大而留下的更多空白
 	end
 
+	-- 如果角色是表双子，那么下移2行，防止看不见恶魔房概率
+	if
+		Game():GetPlayer(0):GetPlayerType() == PlayerType.PLAYER_JACOB
+		and Data.Runtime.State == Shared.State.RUNNING
+	then
+		startPos.Y = startPos.Y + lineHeight * 2
+	end
+
 	local cWhiteOri = ThemeManager:GetTextColor()
 	local cRedOri = KColor(1, 0, 0, 1)
 
