@@ -151,6 +151,13 @@ local function OnUpdate()
 		room:RemoveDoor(i)
 	end
 
+	-- 利用百变怪哈气的效果将房间风格设置为商店，这样看起来和贪婪模式的最终BOSS战一样
+	-- SHOP和GREED_SHOP的外观完全相同，但是GREED_SHOP会导致游戏崩溃
+	Game():ShowHallucination(0, BackdropType.SHOP)
+
+	-- 把百变怪的哈气音效取消
+	SFXManager():Stop(SoundEffect.SOUND_DEATH_CARD)
+
 	-- 清除箱子皮和空道具底座
 	ClearRoomRemnants()
 
