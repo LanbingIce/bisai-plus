@@ -7,6 +7,11 @@ local function OnPlayerUpdate(_, player)
 		return
 	end
 	player:AddControlsCooldown(1)
+
+	-- 准备状态下，关闭玩家的碰撞箱以实现无敌，防止极端情况下死掉
+	if state == BISAI_PLUS.Shared.State.READY and Game():GetFrameCount() > 0 then
+		player.EntityCollisionClass = EntityCollisionClass.ENTCOLL_NONE
+	end
 end
 
 local function OnInputAction(_, entity, inputHook, action)
