@@ -378,6 +378,10 @@ BISAI_PLUS.LoadPlugin(
 	"修改皇帝卡：从当前房间按最短路径向BOSS房前进4格，持有[塔罗牌桌布]时改为6格"
 )
 BISAI_PLUS.LoadPlugin(
+	"fix_anima_sola_double_tap",
+	"修复：堕化雅各快速双击孤魂铁索时无事发生的问题"
+)
+BISAI_PLUS.LoadPlugin(
 	"fix_t_forgotten_body_stuck",
 	"修复：当堕化遗骸的本体被抛到高柱子里面时，召回本体"
 )
