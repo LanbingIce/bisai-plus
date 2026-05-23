@@ -616,7 +616,7 @@ local function EnsureCustomThemeWindow()
 			false
 		)
 		FontPlain:DrawStringScaledUTF8(
-			"mods/bisai+/resources/gfx/main_bg.png 覆盖原文件",
+			"mods/bisai+/resources/gfx/main_bg.png 如果已存在则覆盖",
 			pos.X,
 			pos.Y + 10,
 			0.5,
@@ -626,7 +626,7 @@ local function EnsureCustomThemeWindow()
 			false
 		)
 		FontPlain:DrawStringScaledUTF8(
-			"格式: png动画文件 (图片分辨率: 480x320)",
+			"格式: png图片文件 (图片分辨率: 480x320)",
 			pos.X,
 			pos.Y + 20,
 			0.5,
