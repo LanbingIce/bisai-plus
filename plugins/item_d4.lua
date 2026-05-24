@@ -36,6 +36,9 @@ local function OnUseItem(_, item, rng, player, flags, slot, varData)
 			return
 		end
 		itemWisp:Kill()
+
+		-- 取消魂火破灭的音效
+		SFXManager():Stop(SoundEffect.SOUND_STEAM_HALFSEC)
 	end)
 end
 
