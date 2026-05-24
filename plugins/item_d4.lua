@@ -30,6 +30,9 @@ local function OnUseItem(_, item, rng, player, flags, slot, varData)
 	-- 令这个魂火无碰撞箱
 	itemWisp.EntityCollisionClass = EntityCollisionClass.ENTCOLL_NONE
 
+	-- 令这个魂火不可见
+	itemWisp.Visible = false
+
 	-- 下一帧，移除这个魂火
 	BISAI_PLUS.Dispatcher:Dispatch(function()
 		if not itemWisp then
