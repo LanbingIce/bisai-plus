@@ -4,11 +4,6 @@ local function OnUseItem(_, item, rng, player, flags, slot, varData)
 		return
 	end
 
-	-- 确保使用的道具是D4
-	if item ~= CollectibleType.COLLECTIBLE_D4 then
-		return
-	end
-
 	-- 排除骰子房效果(一/六点)
 	if flags & UseFlag.USE_REMOVEACTIVE == UseFlag.USE_REMOVEACTIVE then
 		return
@@ -45,4 +40,4 @@ local function OnUseItem(_, item, rng, player, flags, slot, varData)
 	end)
 end
 
-BISAI_PLUS:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, OnUseItem)
+BISAI_PLUS:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, OnUseItem, CollectibleType.COLLECTIBLE_D4)
