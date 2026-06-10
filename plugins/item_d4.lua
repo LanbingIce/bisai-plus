@@ -1,4 +1,4 @@
-local function OnUseItem(_, item, rng, player, flags, slot, varData)
+local function OnPreUseD4(_, item, rng, player, flags, slot, varData)
 	-- 确保是真正的角色，而不是小罗饰品或者店长稻草人之类的
 	if not BISAI_PLUS.GameUtils.IsRealPlayer(player) then
 		return
@@ -40,4 +40,13 @@ local function OnUseItem(_, item, rng, player, flags, slot, varData)
 	end)
 end
 
-BISAI_PLUS:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, OnUseItem, CollectibleType.COLLECTIBLE_D4)
+local function OnUseD4(_, item, rng, player, flags, slot, varData)
+	if not BISAI_PLUS.GameUtils.IsRealPlayer(player) then
+		return
+	end
+
+	-- todo
+end
+
+BISAI_PLUS:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, OnPreUseD4, CollectibleType.COLLECTIBLE_D4)
+BISAI_PLUS:AddCallback(ModCallbacks.MC_USE_ITEM, OnUseD4, CollectibleType.COLLECTIBLE_D4)
