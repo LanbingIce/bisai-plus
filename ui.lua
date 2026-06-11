@@ -8,6 +8,7 @@ local Dispatcher = require("bisai+.dispatcher")
 
 ---@type wga_menu
 local WGA = include("vendor.worst gui api")
+local QR = include("vendor.qrencode")
 
 local NIL_SPRITE = Sprite()
 local NIL_FUNCTION = function() end
@@ -81,11 +82,14 @@ end
 
 local TextBoxSprite = Sprite()
 local StageIconSprite = Sprite()
+local PixelSprite = Sprite()
 
 do
 	TextBoxSprite:Load("gfx/wdm_editor/ui copy.anm2", true)
 	TextBoxSprite:Play("custom textbox_bg")
 	StageIconSprite:Load("gfx/ui/stage/progress.anm2", true)
+	PixelSprite:Load("gfx/pixel/pixel.anm2", true)
+	PixelSprite:SetFrame("Idle", 0)
 end
 
 local WindowName = {
@@ -1977,6 +1981,89 @@ local function RenderTimeStatistics()
 	end
 end
 
+local function CompressVersion(versionStr)
+	local major, minor, patch = versionStr:match("(%d+)%.(%d+)%.(%d+)")
+	major = tonumber(major) or 0
+	minor = tonumber(minor) or 0
+	patch = tonumber(patch) or 0
+	return (major << 10) | (minor << 4) | patch
+end
+
+local function SerializeState()
+	local seed = Data.Runtime.Seed
+	local playerType = Data.Runtime.PlayerType
+
+	-- 当前这局的真实运行时间 (Current Run Time)
+	local currentRunTime = Data.Runtime.Timer.StoredTime
+
+	if Data.Runtime.State == Shared.State.RUNNING then
+		local currentTime = Isaac.GetTime()
+		currentRunTime = currentRunTime + (currentTime - Data.Runtime.Timer.StartTime)
+	elseif Data.Runtime.State == Shared.State.READY then
+		local player = Game():GetPlayer(0)
+		playerType = player:GetPlayerType()
+		seed = Game():GetSeeds():GetStartSeed()
+	end
+
+	-- 数据蓝图：命名与真实业务含义完全对齐
+	local dataLayout = {
+		{ desc = "Version", bytes = 2, value = CompressVersion(BISAI_PLUS.Version) },
+		{ desc = "Seed", bytes = 4, value = seed },
+		{ desc = "PlayerType", bytes = 1, value = playerType },
+		{ desc = "Goal", bytes = 1, value = Data.Runtime.Goal },
+		{ desc = "DeathCount", bytes = 1, value = Data.Runtime.DeathCount },
+		{ desc = "State", bytes = 1, value = Data.Runtime.State },
+		{ desc = "RecordWeight", bytes = 1, value = Data.Runtime.Record.LevelWeight },
+		{ desc = "RecordTime", bytes = 3, value = Data.Runtime.Record.Time },
+		{ desc = "CurrentRunTime", bytes = 3, value = currentRunTime },
+	}
+
+	local formatStr = ">"
+	local values = {}
+
+	for _, item in ipairs(dataLayout) do
+		formatStr = formatStr .. "I" .. tostring(item.bytes)
+		table.insert(values, item.value)
+	end
+
+	return string.pack(formatStr, table.unpack(values))
+end
+
+function RenderQR(binary, x, y, displayScale)
+	local module = displayScale
+	local quiet = 1
+
+	local _, mat = QR.qrcode(binary, 1)
+	local size = #mat
+	local totalPx = (size + quiet * 2) * module
+
+	local pix = PixelSprite
+
+	-- 绘制白色背景
+	pix.Color, pix.Scale = Color(1, 1, 1, 1, 0, 0, 0), Vector(totalPx, totalPx)
+	pix:Render(Vector(x + totalPx * 0.5, y + totalPx * 0.5))
+
+	-- 准备绘制黑色模块
+	pix.Color, pix.Scale = Color(0, 0, 0, 1, 0, 0, 0), Vector(module, module)
+
+	local startX = x + quiet * module + module * 0.5
+	local startY = y + quiet * module + module * 0.5
+
+	for r = 1, size do
+		local py = startY + (r - 1) * module -- 保持基准乘法，防止浮点误差
+		local row = mat[r] -- 仅做一次外层提取（假设输入是行优先）
+		if row then
+			for c = 1, size do
+				if row[c] and row[c] > 0 then
+					pix:Render(Vector(startX + (c - 1) * module, py))
+				end
+			end
+		end
+	end
+
+	return true
+end
+
 local function RenderHud()
 	-- ===========================
 	-- 配置与状态获取
@@ -2130,11 +2217,12 @@ local function RenderHud()
 
 	local nameW = DrawText(fNormal, pName, cursorX, cursorY, nameColor)
 	local sepW = DrawText(fMono, " - ", cursorX + nameW, cursorY, cWhite)
-	DrawText(fMono, seedStr, cursorX + nameW + sepW, cursorY, seedColor)
+	local seedW = DrawText(fMono, seedStr, cursorX + nameW + sepW, cursorY, seedColor)
+	local playerLineRight = cursorX + nameW + sepW + seedW
 
 	cursorY = cursorY + lineHeight
 
-	-- 超级种子显示（在 RUNNING 状态不显示）
+	-- 超级种子和二维码显示（在 RUNNING 状态不显示）
 	if Data.Runtime.State ~= Shared.State.RUNNING then
 		local ssLabel = "超级种子："
 		local ssLabelColor = cWhite
@@ -2168,6 +2256,15 @@ local function RenderHud()
 			fMono:DrawStringScaledUTF8(ch, x, cursorY, curScale, curScale, color, 0, false)
 			x = x + fMono:GetStringWidthUTF8(ch) * curScale
 		end
+
+		local superSeedLineRight = x
+
+		local qrX = (isFilterParams and math.max(playerLineRight, superSeedLineRight) or superSeedLineRight) + 1
+		local displayScale = isFilterParams and 1 or 0.5
+
+		-- 这个式子算出的纵向坐标在有无滤镜的情况下都非常合适，算是硬凑出来的，没有什么特别的道理
+		local qrY = cursorY + lineHeight - 21 * displayScale - 1 / displayScale
+		RenderQR(SerializeState(), qrX, qrY, displayScale)
 
 		cursorY = cursorY + lineHeight
 	end
