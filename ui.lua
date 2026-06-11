@@ -7,7 +7,7 @@ local Utils = require("bisai+.utils")
 local Dispatcher = require("bisai+.dispatcher")
 
 ---@type wga_menu
-local WGA = include("worst gui api")
+local WGA = include("vendor.worst gui api")
 
 local NIL_SPRITE = Sprite()
 local NIL_FUNCTION = function() end
