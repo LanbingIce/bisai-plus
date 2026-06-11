@@ -463,6 +463,7 @@ BISAI_PLUS.LoadPlugin(
 	"误入其他终点的最终房间之后，击杀最终BOSS生成虚空门"
 )
 BISAI_PLUS.LoadPlugin("qol_beast_show_hud", "祸兽终点结算后传送至第1层，以便显示属性和道具列表")
+BISAI_PLUS.LoadPlugin("qol_curse_immunity_after_finish", "结算后，清除并免疫所有诅咒")
 BISAI_PLUS.LoadPlugin("qol_dream_catcher_reminder", "持有捕梦网靠近下层入口时进行醒目提示")
 BISAI_PLUS.LoadPlugin("qol_pause_on_game_end", "因死亡而导致游戏结束时，自动暂停计时器")
 BISAI_PLUS.LoadPlugin("qol_right_click_drop", "鼠标右键映射为丢弃键")
