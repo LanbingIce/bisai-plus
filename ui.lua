@@ -2368,8 +2368,8 @@ local function OnPlayerInit()
 end
 
 local function OnExecuteCmd(_, cmd, args)
-	-- 只在准备状态下处理超级种子
-	if Data.Runtime.State ~= Shared.State.READY then
+	-- 只在准备状态和结算状态下处理超级种子
+	if Data.Runtime.State ~= Shared.State.READY and Data.Runtime.State ~= Shared.State.FINISHED then
 		return
 	end
 
@@ -2389,6 +2389,12 @@ local function OnExecuteCmd(_, cmd, args)
 		-- 无论什么原因，解码失败都要返回
 		return
 	end
+
+	-- 如果是结算状态下的话，先进行一个新开局
+	if Data.Runtime.State == Shared.State.FINISHED then
+		MessageBus:Send(Messages.Command.CREATE_RUN)
+	end
+
 	StartRun(runConfig)
 end
 
