@@ -18,7 +18,7 @@ local function OnInputAction(_, entity, inputHook, action)
 		return
 	end
 
-	if action ~= ButtonAction.ACTION_ITEM then
+	if action ~= ButtonAction.ACTION_ITEM and action ~= ButtonAction.ACTION_PILLCARD then
 		return
 	end
 
