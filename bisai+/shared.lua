@@ -50,7 +50,9 @@ Shared.GoalData = {
 	[Shared.Goal.DELIRIUM] = {
 		Name = "精神错乱",
 		Nickname = "百变怪",
-		Desc = [[- 进入虚空时，获得[指南针]和[藏宝图]的效果
+		Desc = [[- 封闭阴间入口
+		- 封闭教堂入口
+		- 进入虚空时，获得[指南针]和[藏宝图]的效果
 		]],
 		IsRoom = function()
 			return Game():GetLevel():GetCurrentRoomDesc().Data.Name == "Delirium"
