@@ -1389,21 +1389,19 @@ function EnsureMainWindow()
 				name,
 				function(button)
 					if button == 0 then
-						StartRun({
-							{
-								Goal = i,
-							},
-						})
+						if Data.Runtime.Goal == i then
+							StartRun({ Goal = i })
+						else
+							Data.Runtime.Goal = i
+							SFXManager():Play(SoundEffect.SOUND_CHARACTER_SELECT_RIGHT)
+							MessageBus:Send(Messages.Command.SET_GOAL, { Goal = i })
+						end
 					end
 				end,
-				function()
-					return i == Data.Runtime.Goal
+				function(isHovered)
+					return isHovered or i == Data.Runtime.Goal
 				end,
-				function()
-					if Data.Runtime.MouseMoved then
-						Data.Runtime.Goal = i
-					end
-				end
+				function() end
 			)
 		end
 
